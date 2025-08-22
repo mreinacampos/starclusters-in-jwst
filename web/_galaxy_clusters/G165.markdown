@@ -1,0 +1,6 @@
+---
+name: G165
+redshift: ---
+---
+
+# This is the README for the galaxy cluster G165

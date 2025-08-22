@@ -32,6 +32,15 @@ theme: minima
 plugins:
   - jekyll-feed
 
+collections:
+  galaxy_clusters:
+    output: true
+    permalink: /galaxy_clusters/:path/
+    title: Galaxy clusters
+    description: >- # this means to ignore newlines until "baseurl:"
+      Photometric catalogues of bright star clusters in galaxy clusters observed with JWST across cosmic time.
+    icon: fas fa-star
+
 # Exclude from processing.
 # The following items will not be processed, by default.
 # Any item listed under the `exclude:` key here will be automatically added to
