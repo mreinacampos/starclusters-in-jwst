@@ -7,7 +7,12 @@ layout: home
 
 This is the main page of the website
 
-{% for galaxy_cluster in site.galaxy_clusters %}
-  <h2>{{ galaxy_cluster.name }} - {{ galaxy_cluster.redshift }}</h2>
-  <p>{{ galaxy_cluster.content | markdownify }}</p>
+## Galaxy Clusters
+
+{% assign sorted_clusters = site.galaxy_clusters | sort: 'redshift' %}
+
+| Galaxy Cluster | Redshift | Details |
+|---------------|----------|---------|
+{% for galaxy_cluster in sorted_clusters -%}
+| {{ galaxy_cluster.name }} | {% if galaxy_cluster.redshift and galaxy_cluster.redshift != "" and galaxy_cluster.redshift != "---" %}{{ galaxy_cluster.redshift }}{% else %}N/A{% endif %} | [View Details]({{ galaxy_cluster.url }}) |
 {% endfor %}
