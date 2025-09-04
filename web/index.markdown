@@ -5,8 +5,6 @@
 layout: home
 ---
 
-This is the main page of the website
-
 ## Galaxy Clusters
 
 {% assign sorted_clusters = site.galaxy_clusters | sort: 'redshift' %}
