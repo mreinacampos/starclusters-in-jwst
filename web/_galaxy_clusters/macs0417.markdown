@@ -1,6 +1,12 @@
 ---
 name: MACS0417
 redshift: 0.443
+status: published
+layout: page
 ---
 
 # This is the README for the galaxy cluster MACS0417
+
+Corresponding author: Bill Harris
+
+[Reference](https://ui.adsabs.harvard.edu/abs/2025arXiv250803883B/abstract)

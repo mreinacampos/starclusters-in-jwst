@@ -11,8 +11,8 @@ This is the main page of the website
 
 {% assign sorted_clusters = site.galaxy_clusters | sort: 'redshift' %}
 
-| Galaxy Cluster | Redshift | Details |
-|---------------|----------|---------|
+| Galaxy Cluster | Redshift | Status | Details |
+|---------------|----------|---------|---------|
 {% for galaxy_cluster in sorted_clusters -%}
-| {{ galaxy_cluster.name }} | {% if galaxy_cluster.redshift and galaxy_cluster.redshift != "" and galaxy_cluster.redshift != "---" %}{{ galaxy_cluster.redshift }}{% else %}N/A{% endif %} | [View Details]({{ galaxy_cluster.url }}) |
+| {{ galaxy_cluster.name }} | {% if galaxy_cluster.redshift and galaxy_cluster.redshift != "" and galaxy_cluster.redshift != "---" %}{{ galaxy_cluster.redshift }}{% else %}N/A{% endif %} | {{ galaxy_cluster.status }}|[View Details]({{ site.baseurl }}{{ galaxy_cluster.url }}) |
 {% endfor %}

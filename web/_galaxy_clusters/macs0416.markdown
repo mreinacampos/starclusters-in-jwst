@@ -1,8 +1,11 @@
 ---
 name: MACS0416
 redshift: 0.397
+status: in progress
+layout: page
 ---
 
 # This is the README for the galaxy cluster MACS 0416
 
-[Reference](https://ui.adsabs.harvard.edu/abs/2025arXiv250803883B/abstract)
+Corresponding author: Bill Harris
+
