@@ -1,26 +1,26 @@
 ---
-name: "RXJ2129"
-redshift: 0.234
-status: "Completed"
+name: "Bullet Cluster"
+redshift: 0.296
+status: "in progress"
 layout: page
 ---
 
-# RXJ2129
+# Bullet Cluster
 
-RXJ2129 is an X-ray selected galaxy cluster with interesting substructure.
+The Bullet Cluster (1E 0657-558) is a famous example of colliding galaxy clusters, providing strong evidence for dark matter.
 
-Corresponding author: Kaitlyn Keatley
-
-[Reference](https://ui.adsabs.harvard.edu/abs/2025arXiv250803626K/abstract)
+Corresponding author: Bill Harris
 
 ## Basic Information
 - **Redshift**: {{ page.redshift }}
 - **Status**: {{ page.status }}
+- **Alternative Names**: 1E 0657-558
 
 ## Public Data
 
-- X-ray observations (Chandra, XMM)
-- Optical imaging
+- Chandra X-ray observations
+- Hubble Space Telescope imaging
+- Weak lensing mass maps
 
 ## Proprietary Data Access
 
@@ -32,9 +32,10 @@ Corresponding author: Kaitlyn Keatley
 <div id="protected-content" style="display: none;">
 <h3>🔒 Proprietary Files</h3>
 <ul>
-<li><a href="{{ site.baseurl }}/data/rxj2129/jwst_miri_observations.fits" target="_blank">JWST MIRI Data</a></li>
-<li><a href="{{ site.baseurl }}/data/rxj2129/icm_temperature_map.fits" target="_blank">ICM Temperature Maps</a></li>
-<li><a href="{{ site.baseurl }}/data/rxj2129/substructure_analysis.py" target="_blank">Substructure Analysis</a></li>
+<li><a href="{{ site.baseurl }}/data/bullet_cluster/jwst_nircam_deep.fits" target="_blank">JWST NIRCam Deep Imaging</a></li>
+<li><a href="{{ site.baseurl }}/data/bullet_cluster/dark_matter_reconstruction.fits" target="_blank">Dark Matter Mass Map</a></li>
+<li><a href="{{ site.baseurl }}/data/bullet_cluster/collision_dynamics_model.py" target="_blank">Collision Dynamics Scripts</a></li>
+<li><a href="{{ site.baseurl }}/data/bullet_cluster/shock_front_analysis.csv" target="_blank">Shock Front Analysis</a></li>
 </ul>
 <p><em>Note: These are placeholder links for demonstration. Actual files require <a href="{{ site.baseurl }}/request-access/">formal access request</a>.</em></p>
 </div>

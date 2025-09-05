@@ -1,12 +1,78 @@
 ---
-name: MACS0417
+name: "MACS0417"
 redshift: 0.443
-status: published
+status: "Completed"
 layout: page
 ---
 
-# This is the README for the galaxy cluster MACS0417
+# MACS0417
+
+MACS J0417.5-1154 is part of the MACS survey of massive galaxy clusters.
 
 Corresponding author: Bill Harris
 
 [Reference](https://ui.adsabs.harvard.edu/abs/2025arXiv250803883B/abstract)
+
+## Basic Information
+- **Redshift**: {{ page.redshift }}
+- **Status**: {{ page.status }}
+
+## Public Data
+
+- MACS survey data
+- Multi-wavelength observations
+
+## Proprietary Data Access
+
+<div id="password-section">
+<p><strong>Proprietary research files require authentication.</strong></p>
+<button onclick="checkPassword()" class="auth-button">Access Proprietary Files</button>
+</div>
+
+<div id="protected-content" style="display: none;">
+<h3>🔒 Proprietary Files</h3>
+<ul>
+<li><a href="{{ site.baseurl }}/data/macs0417/multiband_photometry.fits" target="_blank">Multi-band Photometry</a></li>
+<li><a href="{{ site.baseurl }}/data/macs0417/cluster_member_catalog.csv" target="_blank">Cluster Member Catalog</a></li>
+<li><a href="{{ site.baseurl }}/data/macs0417/velocity_dispersion_analysis.py" target="_blank">Velocity Dispersion Scripts</a></li>
+</ul>
+<p><em>Note: These are placeholder links for demonstration. Actual files require <a href="{{ site.baseurl }}/request-access/">formal access request</a>.</em></p>
+</div>
+
+<script>
+function checkPassword() {
+    const password = prompt("Enter password to access proprietary files:");
+    if (password === "MRC") {
+        document.getElementById("protected-content").style.display = "block";
+        document.getElementById("password-section").innerHTML = "<p><em>✅ Authentication successful. Proprietary files are now visible below.</em></p>";
+    } else if (password !== null) {
+        alert("Incorrect password. Please contact the research team for access.");
+    }
+}
+</script>
+
+<style>
+.auth-button {
+    background-color: #0366d6;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+.auth-button:hover {
+    background-color: #0256cc;
+}
+#protected-content {
+    background-color: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    padding: 16px;
+    margin-top: 16px;
+}
+</style>
+
+---
+
+**Data Access**: For access to proprietary files, please [submit a request]({{ site.baseurl }}/request-access/).
