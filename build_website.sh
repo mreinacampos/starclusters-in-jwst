@@ -6,5 +6,6 @@
 rm -r ./docs
 mv ./web/_site/ ./docs
 git add docs
-git commit -m "Updating the website"
+git add web
+git commit -m "Updating the website - html and raw files"
 git push origin main
