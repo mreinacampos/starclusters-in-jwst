@@ -8,7 +8,7 @@ layout: page
 # G165
 
 Galaxy cluster G165 is under investigation for stellar population studies.
-
+ 
 Corresponding author: Tyler Hinrichs
 
 ## Basic Information
