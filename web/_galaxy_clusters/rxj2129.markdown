@@ -7,20 +7,12 @@ layout: page
 
 # RXJ2129
 
-RXJ2129 is an X-ray selected galaxy cluster with interesting substructure.
-
 Corresponding author: Kaitlyn Keatley
-
-[Reference](https://ui.adsabs.harvard.edu/abs/2025arXiv250803626K/abstract)
 
 ## Basic Information
 - **Redshift**: {{ page.redshift }}
 - **Status**: {{ page.status }}
-
-## Public Data
-
-- X-ray observations (Chandra, XMM)
-- Optical imaging
+- **Reference to be cited**: [Keatley & Harris (2025)](https://ui.adsabs.harvard.edu/abs/2025arXiv250803626K/abstract)
 
 ## Proprietary Data Access
 
@@ -32,9 +24,7 @@ Corresponding author: Kaitlyn Keatley
 <div id="protected-content" style="display: none;">
 <h3>🔒 Proprietary Files</h3>
 <ul>
-<li><a href="{{ site.baseurl }}/data/rxj2129/jwst_miri_observations.fits" target="_blank">JWST MIRI Data</a></li>
-<li><a href="{{ site.baseurl }}/data/rxj2129/icm_temperature_map.fits" target="_blank">ICM Temperature Maps</a></li>
-<li><a href="{{ site.baseurl }}/data/rxj2129/substructure_analysis.py" target="_blank">Substructure Analysis</a></li>
+<li><a href="{{ site.baseurl }}/data/rxj2129/jwst_miri_observations.fits" target="_blank">Photometric GC catalogue - v1</a></li>
 </ul>
 <p><em>Note: These are placeholder links for demonstration. Actual files require <a href="{{ site.baseurl }}/request-access/">formal access request</a>.</em></p>
 </div>

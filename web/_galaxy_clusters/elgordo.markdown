@@ -7,20 +7,12 @@ layout: page
 
 # El Gordo
 
-El Gordo is one of the most massive galaxy clusters known at high redshift.
-
 Corresponding author: Bill Harris
-
-[Reference](https://ui.adsabs.harvard.edu/abs/2025arXiv250812862H/abstract)
 
 ## Basic Information
 - **Redshift**: {{ page.redshift }}
 - **Status**: {{ page.status }}
-
-## Public Data
-
-- Spitzer and Hubble observations
-- Published mass measurements
+- **Reference to be cited**: [Harris et al. (2025)](https://ui.adsabs.harvard.edu/abs/2025arXiv250812862H/abstract)
 
 ## Proprietary Data Access
 
@@ -32,9 +24,7 @@ Corresponding author: Bill Harris
 <div id="protected-content" style="display: none;">
 <h3>🔒 Proprietary Files</h3>
 <ul>
-<li><a href="{{ site.baseurl }}/data/elgordo/jwst_nircam_data.fits" target="_blank">JWST NIRCam Observations</a></li>
-<li><a href="{{ site.baseurl }}/data/elgordo/high_z_galaxy_catalog.csv" target="_blank">High-z Galaxy Catalog</a></li>
-<li><a href="{{ site.baseurl }}/data/elgordo/merger_dynamics_analysis.py" target="_blank">Merger Dynamics Scripts</a></li>
+<li><a href="{{ site.baseurl }}/data/elgordo/jwst_nircam_data.fits" target="_blank">Photometric GC catalogues - v1</a></li>
 </ul>
 <p><em>Note: These are placeholder links for demonstration. Actual files require <a href="{{ site.baseurl }}/request-access/">formal access request</a>.</em></p>
 </div>

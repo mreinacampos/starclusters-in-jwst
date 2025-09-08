@@ -5,22 +5,14 @@ status: "Completed"
 layout: page
 ---
 
-# MACS0417
-
-MACS J0417.5-1154 is part of the MACS survey of massive galaxy clusters.
+# MACS0417 J0417.5-1154
 
 Corresponding author: Bill Harris
-
-[Reference](https://ui.adsabs.harvard.edu/abs/2025arXiv250803883B/abstract)
 
 ## Basic Information
 - **Redshift**: {{ page.redshift }}
 - **Status**: {{ page.status }}
-
-## Public Data
-
-- MACS survey data
-- Multi-wavelength observations
+- **Reference to be cited**: [Harris et al. (2025b)](https://ui.adsabs.harvard.edu/abs/2025arXiv250803883B/abstract)
 
 ## Proprietary Data Access
 
@@ -32,9 +24,7 @@ Corresponding author: Bill Harris
 <div id="protected-content" style="display: none;">
 <h3>🔒 Proprietary Files</h3>
 <ul>
-<li><a href="{{ site.baseurl }}/data/macs0417/multiband_photometry.fits" target="_blank">Multi-band Photometry</a></li>
-<li><a href="{{ site.baseurl }}/data/macs0417/cluster_member_catalog.csv" target="_blank">Cluster Member Catalog</a></li>
-<li><a href="{{ site.baseurl }}/data/macs0417/velocity_dispersion_analysis.py" target="_blank">Velocity Dispersion Scripts</a></li>
+<li><a href="{{ site.baseurl }}/data/macs0417/multiband_photometry.fits" target="_blank">Photometric GC catalogue - v1</a></li>
 </ul>
 <p><em>Note: These are placeholder links for demonstration. Actual files require <a href="{{ site.baseurl }}/request-access/">formal access request</a>.</em></p>
 </div>

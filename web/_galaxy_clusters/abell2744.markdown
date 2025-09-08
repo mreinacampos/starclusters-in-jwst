@@ -7,8 +7,6 @@ layout: page
 
 # Abell 2744
 
-Abell 2744, also known as "Pandora's Cluster," is a massive galaxy cluster merger.
-
 Corresponding author: Bill Harris
 
 [Paper I](https://ui.adsabs.harvard.edu/abs/2023MNRAS.526.2696H/abstract)
@@ -18,13 +16,7 @@ Corresponding author: Bill Harris
 ## Basic Information
 - **Redshift**: {{ page.redshift }}
 - **Status**: {{ page.status }}
-- **Alternative Names**: Pandora's Cluster
-
-## Public Data
-
-- Published photometry catalogs
-- Hubble Space Telescope imaging
-- Literature compilation
+- **References to be cited**:  [Harris & Reina-Campos (2023)](https://ui.adsabs.harvard.edu/abs/2023MNRAS.526.2696H/abstract) and [Harris & Reina-Campos (2024)](https://ui.adsabs.harvard.edu/abs/2024ApJ...971..155H/abstract)
 
 ## Proprietary Data Access
 
@@ -36,10 +28,7 @@ Corresponding author: Bill Harris
 <div id="protected-content" style="display: none;">
 <h3>🔒 Proprietary Files</h3>
 <ul>
-<li><a href="{{ site.baseurl }}/data/abell2744/jwst_raw_observations.fits" target="_blank">JWST Raw Observations (FITS)</a></li>
-<li><a href="{{ site.baseurl }}/data/abell2744/stellar_mass_catalog.csv" target="_blank">Stellar Mass Catalog</a></li>
-<li><a href="{{ site.baseurl }}/data/abell2744/color_magnitude_analysis.py" target="_blank">Custom Analysis Scripts</a></li>
-<li><a href="{{ site.baseurl }}/data/abell2744/preliminary_results.pdf" target="_blank">Preliminary Results (Draft)</a></li>
+<li><a href="{{ site.baseurl }}/data/abell2744/jwst_raw_observations.fits" target="_blank">Photometric GC catalogues - v1</a></li>
 </ul>
 <p><em>Note: These are placeholder links for demonstration. Actual files require <a href="{{ site.baseurl }}/request-access/">formal access request</a>.</em></p>
 </div>

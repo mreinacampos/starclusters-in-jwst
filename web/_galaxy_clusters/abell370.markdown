@@ -1,24 +1,17 @@
 ---
 name: "Abell 370"
-redshift: "---"
+redshift: 0.375
 status: "in progress"
 layout: page
 ---
 
 # Abell 370
 
-Abell 370 is a massive galaxy cluster acting as a gravitational lens.
-
 Corresponding author: Bill Harris
 
 ## Basic Information
-- **Redshift**: Not available
+- **Redshift**: {{ page.redshift }}
 - **Status**: {{ page.status }}
-
-## Public Data
-
-- Published lensing models
-- Hubble Frontier Fields data
 
 ## Proprietary Data Access
 
@@ -30,9 +23,7 @@ Corresponding author: Bill Harris
 <div id="protected-content" style="display: none;">
 <h3>🔒 Proprietary Files</h3>
 <ul>
-<li><a href="{{ site.baseurl }}/data/abell370/lensing_reconstruction.fits" target="_blank">Lensing Reconstruction Models</a></li>
-<li><a href="{{ site.baseurl }}/data/abell370/background_galaxy_catalog.csv" target="_blank">Background Galaxy Catalog</a></li>
-<li><a href="{{ site.baseurl }}/data/abell370/mass_profile_analysis.py" target="_blank">Mass Profile Scripts</a></li>
+<li><a href="{{ site.baseurl }}/data/abell370/lensing_reconstruction.fits" target="_blank">Photometric GC catalogues - v1</a></li>
 </ul>
 <p><em>Note: These are placeholder links for demonstration. Actual files require <a href="{{ site.baseurl }}/request-access/">formal access request</a>.</em></p>
 </div>

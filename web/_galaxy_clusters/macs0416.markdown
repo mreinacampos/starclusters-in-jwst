@@ -7,18 +7,11 @@ layout: page
 
 # MACS0416
 
-MACS J0416.1-2403 is a massive galaxy cluster with complex lensing features.
-
 Corresponding author: Jessica Berkheimer
 
 ## Basic Information
 - **Redshift**: {{ page.redshift }}
 - **Status**: {{ page.status }}
-
-## Public Data
-
-- Hubble Frontier Fields data
-- Published lensing models
 
 ## Proprietary Data Access
 
@@ -30,9 +23,7 @@ Corresponding author: Jessica Berkheimer
 <div id="protected-content" style="display: none;">
 <h3>🔒 Proprietary Files</h3>
 <ul>
-<li><a href="{{ site.baseurl }}/data/macs0416/jwst_nirspec_data.fits" target="_blank">JWST NIRSpec Spectroscopy</a></li>
-<li><a href="{{ site.baseurl }}/data/macs0416/lensed_galaxy_catalog.csv" target="_blank">Lensed Galaxy Catalog</a></li>
-<li><a href="{{ site.baseurl }}/data/macs0416/magnification_maps.py" target="_blank">Magnification Analysis</a></li>
+<li><a href="{{ site.baseurl }}/data/macs0416/jwst_nirspec_data.fits" target="_blank">Photometric GC catalogue - v1</a></li>
 </ul>
 <p><em>Note: These are placeholder links for demonstration. Actual files require <a href="{{ site.baseurl }}/request-access/">formal access request</a>.</em></p>
 </div>

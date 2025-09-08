@@ -1,24 +1,17 @@
 ---
 name: "G165"
-redshift: ""
+redshift: 0.35
 status: "In Progress"
 layout: page
 ---
 
-# G165
-
-Galaxy cluster G165 is under investigation for stellar population studies.
+# PLCK G165.7+67.0
  
 Corresponding author: Tyler Hinrichs
 
 ## Basic Information
-- **Redshift**: Not determined
+- **Redshift**: {{ page.redshift }}
 - **Status**: {{ page.status }}
-
-## Public Data
-
-- Ground-based photometry
-- Literature references
 
 ## Proprietary Data Access
 
@@ -30,9 +23,7 @@ Corresponding author: Tyler Hinrichs
 <div id="protected-content" style="display: none;">
 <h3>🔒 Proprietary Files</h3>
 <ul>
-<li><a href="{{ site.baseurl }}/data/g165/spectroscopic_observations.fits" target="_blank">Spectroscopic Data</a></li>
-<li><a href="{{ site.baseurl }}/data/g165/photometric_redshift_catalog.csv" target="_blank">Photo-z Catalog</a></li>
-<li><a href="{{ site.baseurl }}/data/g165/stellar_population_models.py" target="_blank">Stellar Population Scripts</a></li>
+<li><a href="{{ site.baseurl }}/data/g165/spectroscopic_observations.fits" target="_blank">Photometric GC catalogue - v1</a></li>
 </ul>
 <p><em>Note: These are placeholder links for demonstration. Actual files require <a href="{{ site.baseurl }}/request-access/">formal access request</a>.</em></p>
 </div>

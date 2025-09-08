@@ -7,20 +7,12 @@ layout: page
 
 # Bullet Cluster
 
-The Bullet Cluster (1E 0657-558) is a famous example of colliding galaxy clusters, providing strong evidence for dark matter.
-
 Corresponding author: Bill Harris
 
 ## Basic Information
 - **Redshift**: {{ page.redshift }}
 - **Status**: {{ page.status }}
 - **Alternative Names**: 1E 0657-558
-
-## Public Data
-
-- Chandra X-ray observations
-- Hubble Space Telescope imaging
-- Weak lensing mass maps
 
 ## Proprietary Data Access
 
@@ -32,10 +24,7 @@ Corresponding author: Bill Harris
 <div id="protected-content" style="display: none;">
 <h3>🔒 Proprietary Files</h3>
 <ul>
-<li><a href="{{ site.baseurl }}/data/bullet_cluster/jwst_nircam_deep.fits" target="_blank">JWST NIRCam Deep Imaging</a></li>
-<li><a href="{{ site.baseurl }}/data/bullet_cluster/dark_matter_reconstruction.fits" target="_blank">Dark Matter Mass Map</a></li>
-<li><a href="{{ site.baseurl }}/data/bullet_cluster/collision_dynamics_model.py" target="_blank">Collision Dynamics Scripts</a></li>
-<li><a href="{{ site.baseurl }}/data/bullet_cluster/shock_front_analysis.csv" target="_blank">Shock Front Analysis</a></li>
+<li><a href="{{ site.baseurl }}/data/bullet_cluster/jwst_nircam_deep.fits" target="_blank"></a>Photometric GC catalogues - v1</li>
 </ul>
 <p><em>Note: These are placeholder links for demonstration. Actual files require <a href="{{ site.baseurl }}/request-access/">formal access request</a>.</em></p>
 </div>
