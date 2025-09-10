@@ -3,6 +3,7 @@ name: "El Gordo"
 redshift: 0.87
 status: "Available"
 layout: page
+url_zenodo: "---"
 ---
 
 # El Gordo

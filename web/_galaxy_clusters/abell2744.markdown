@@ -3,6 +3,7 @@ name: "Abell 2744"
 redshift: 0.308
 status: "Available"
 layout: page
+url_zenodo: https://zenodo.org/records/17089402?preview=1
 ---
 
 # Abell 2744

@@ -3,6 +3,7 @@ name: "Bullet Cluster"
 redshift: 0.296
 status: "in progress"
 layout: page
+url_zenodo: "---"
 ---
 
 # Bullet Cluster

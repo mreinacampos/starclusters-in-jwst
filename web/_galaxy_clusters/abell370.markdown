@@ -3,6 +3,7 @@ name: "Abell 370"
 redshift: 0.375
 status: "in progress"
 layout: page
+url_zenodo: "---"
 ---
 
 # Abell 370

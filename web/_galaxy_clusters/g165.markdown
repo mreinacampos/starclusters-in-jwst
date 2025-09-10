@@ -3,6 +3,7 @@ name: "G165"
 redshift: 0.35
 status: "In Progress"
 layout: page
+url_zenodo: "---"
 ---
 
 # PLCK G165.7+67.0

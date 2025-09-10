@@ -3,6 +3,7 @@ name: "MACS0417"
 redshift: 0.443
 status: "Completed"
 layout: page
+url_zenodo: "---"
 ---
 
 # MACS0417 J0417.5-1154
