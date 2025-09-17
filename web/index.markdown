@@ -9,8 +9,8 @@ layout: home
 
 {% assign sorted_clusters = site.galaxy_clusters | sort: 'redshift' %}
 
-| Galaxy Cluster | Redshift | Status | Details | Main author |
-|---------------|----------|---------|---------|---------|
+| Galaxy Cluster | Redshift | Status | Details | 
+|---------------|----------|---------|---------|
 {% for galaxy_cluster in sorted_clusters -%}
-| {{ galaxy_cluster.name }} | {% if galaxy_cluster.redshift and galaxy_cluster.redshift != "" and galaxy_cluster.redshift != "---" %}{{ galaxy_cluster.redshift }}{% else %}N/A{% endif %} | {{ galaxy_cluster.status }}|[View Details]({{ galaxy_cluster.url_zenodo }}) | {{galaxy_cluster.corresponding_author}}
+| {{ galaxy_cluster.name }} | {% if galaxy_cluster.redshift and galaxy_cluster.redshift != "" and galaxy_cluster.redshift != "---" %}{{ galaxy_cluster.redshift }}{% else %}N/A{% endif %} | {{ galaxy_cluster.status }}|[View Details]({{ galaxy_cluster.url_zenodo }}) | 
 {% endfor %}
