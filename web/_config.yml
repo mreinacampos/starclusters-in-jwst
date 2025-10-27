@@ -18,7 +18,7 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-title: Bright star clusters in JWST
+title: RESCUE -- REdshifted Star ClUster Evolution
 email: reinacampos@cita.utoronto.ca
 description: >- # this means to ignore newlines until "baseurl:"
   Database of the photometric catalogues of bright star clusters in galaxy clusters observed with JWST across cosmic time.

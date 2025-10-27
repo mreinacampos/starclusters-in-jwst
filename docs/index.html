@@ -3,25 +3,25 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
-<title>Bright star clusters in JWST | Database of the photometric catalogues of bright star clusters in galaxy clusters observed with JWST across cosmic time.</title>
+<title>RESCUE – REdshifted Star ClUster Evolution | Database of the photometric catalogues of bright star clusters in galaxy clusters observed with JWST across cosmic time.</title>
 <meta name="generator" content="Jekyll v4.4.1" />
-<meta property="og:title" content="Bright star clusters in JWST" />
+<meta property="og:title" content="RESCUE – REdshifted Star ClUster Evolution" />
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="Database of the photometric catalogues of bright star clusters in galaxy clusters observed with JWST across cosmic time." />
 <meta property="og:description" content="Database of the photometric catalogues of bright star clusters in galaxy clusters observed with JWST across cosmic time." />
 <link rel="canonical" href="https://mreinacampos.github.io//starclusters-in-jwst/" />
 <meta property="og:url" content="https://mreinacampos.github.io//starclusters-in-jwst/" />
-<meta property="og:site_name" content="Bright star clusters in JWST" />
+<meta property="og:site_name" content="RESCUE – REdshifted Star ClUster Evolution" />
 <meta property="og:type" content="website" />
 <meta name="twitter:card" content="summary" />
-<meta property="twitter:title" content="Bright star clusters in JWST" />
+<meta property="twitter:title" content="RESCUE – REdshifted Star ClUster Evolution" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebSite","description":"Database of the photometric catalogues of bright star clusters in galaxy clusters observed with JWST across cosmic time.","headline":"Bright star clusters in JWST","name":"Bright star clusters in JWST","url":"https://mreinacampos.github.io//starclusters-in-jwst/"}</script>
+{"@context":"https://schema.org","@type":"WebSite","description":"Database of the photometric catalogues of bright star clusters in galaxy clusters observed with JWST across cosmic time.","headline":"RESCUE – REdshifted Star ClUster Evolution","name":"RESCUE – REdshifted Star ClUster Evolution","url":"https://mreinacampos.github.io//starclusters-in-jwst/"}</script>
 <!-- End Jekyll SEO tag -->
-<link rel="stylesheet" href="/starclusters-in-jwst/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://mreinacampos.github.io//starclusters-in-jwst/feed.xml" title="Bright star clusters in JWST" /></head>
+<link rel="stylesheet" href="/starclusters-in-jwst/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://mreinacampos.github.io//starclusters-in-jwst/feed.xml" title="RESCUE -- REdshifted Star ClUster Evolution" /></head>
 <body><header class="site-header" role="banner">
 
-  <div class="wrapper"><a class="site-title" rel="author" href="/starclusters-in-jwst/">Bright star clusters in JWST</a><nav class="site-nav">
+  <div class="wrapper"><a class="site-title" rel="author" href="/starclusters-in-jwst/">RESCUE -- REdshifted Star ClUster Evolution</a><nav class="site-nav">
         <input type="checkbox" id="nav-trigger" class="nav-trigger" />
         <label for="nav-trigger">
           <span class="menu-icon">
@@ -37,6 +37,232 @@
 <main class="page-content" aria-label="Content">
       <div class="wrapper">
         <div class="home"><h2 id="galaxy-clusters">Galaxy Clusters</h2>
+
+<!-- Timeline + preview -->
+<style>
+  /* small, self-contained styles — move to SCSS if desired */
+  .timeline-wrapper { display:flex; gap:1.25rem; align-items:flex-start; margin-bottom:1.5rem; flex-wrap:wrap; }
+  .timeline-canvas { flex:1 1 540px; min-width:320px; max-width:860px; background:transparent; padding:0.5rem; }
+  .cluster-preview { width:240px; min-width:200px; background:rgba(255,255,255,0.02); border-radius:6px; padding:0.75rem; color:inherit; }
+  .cluster-preview img { width:100%; height:auto; display:block; border-radius:4px; margin-bottom:0.5rem; object-fit:cover; background:#0b1720; }
+  .cluster-meta { font-size:0.92rem; line-height:1.25; }
+  .cluster-meta b { display:block; margin-bottom:0.25rem; }
+  @media (max-width:720px){ .timeline-wrapper { flex-direction:column; } .cluster-preview{ width:100%; } }
+</style>
+
+<div class="timeline-wrapper">
+  <div class="timeline-canvas">
+    <canvas id="redshiftTimeline" aria-label="Galaxy cluster redshift timeline" role="img"></canvas>
+  </div>
+
+  <aside class="cluster-preview" id="clusterPreview">
+    <img id="previewImage" src="/starclusters-in-jwst/assets/images/placeholder.png" alt="Cluster preview" />
+    <div class="cluster-meta" id="previewMeta">
+      <b id="previewTitle">RXJ2129</b>
+      <div id="previewRedshift">Redshift: 0.234</div>
+      <div id="previewStatus">Status: Available</div>
+      <div style="margin-top:.5rem;"><a id="previewLink" href="/starclusters-in-jwst/---" target="_blank" rel="noopener">View details</a></div>
+    </div>
+  </aside>
+</div>
+
+<!-- Data object for JS: safe defaults; parse redshift in JS -->
+<script>
+  const clusters = [
+
+    {
+      name: "RXJ2129",
+      redshift: "0.234",
+      status: "Available",
+      image: "/starclusters-in-jwst/assets/images/placeholder.png",
+      zenodo: "---",
+      permalink: "https://mreinacampos.github.io//starclusters-in-jwst/galaxy_clusters/rxj2129/"
+    },
+
+    {
+      name: "Bullet Cluster",
+      redshift: "0.296",
+      status: "in progress",
+      image: "/starclusters-in-jwst/assets/images/placeholder.png",
+      zenodo: "---",
+      permalink: "https://mreinacampos.github.io//starclusters-in-jwst/galaxy_clusters/bullet_cluster/"
+    },
+
+    {
+      name: "Abell 2744",
+      redshift: "0.308",
+      status: "Available",
+      image: "/starclusters-in-jwst/assets/images/placeholder.png",
+      zenodo: "https://zenodo.org/records/17089402?preview=1",
+      permalink: "https://mreinacampos.github.io//starclusters-in-jwst/galaxy_clusters/abell2744/"
+    },
+
+    {
+      name: "PLCK G165.7+67.0",
+      redshift: "0.35",
+      status: "in progress",
+      image: "/starclusters-in-jwst/assets/images/placeholder.png",
+      zenodo: "---",
+      permalink: "https://mreinacampos.github.io//starclusters-in-jwst/galaxy_clusters/g165/"
+    },
+
+    {
+      name: "Abell 370",
+      redshift: "0.375",
+      status: "in progress",
+      image: "/starclusters-in-jwst/assets/images/placeholder.png",
+      zenodo: "---",
+      permalink: "https://mreinacampos.github.io//starclusters-in-jwst/galaxy_clusters/abell370/"
+    },
+
+    {
+      name: "SMACS0723",
+      redshift: "0.39",
+      status: "Available",
+      image: "/starclusters-in-jwst/assets/images/placeholder.png",
+      zenodo: "---",
+      permalink: "https://mreinacampos.github.io//starclusters-in-jwst/galaxy_clusters/smacs0723/"
+    },
+
+    {
+      name: "MACS0416",
+      redshift: "0.397",
+      status: "in progress",
+      image: "/starclusters-in-jwst/assets/images/placeholder.png",
+      zenodo: "---",
+      permalink: "https://mreinacampos.github.io//starclusters-in-jwst/galaxy_clusters/macs0416/"
+    },
+
+    {
+      name: "MACS0417 J0417.5-1154",
+      redshift: "0.443",
+      status: "Available",
+      image: "/starclusters-in-jwst/assets/images/placeholder.png",
+      zenodo: "---",
+      permalink: "https://mreinacampos.github.io//starclusters-in-jwst/galaxy_clusters/macs0417/"
+    },
+
+    {
+      name: "MACS1423",
+      redshift: "0.543",
+      status: "in progress",
+      image: "/starclusters-in-jwst/assets/images/placeholder.png",
+      zenodo: "---",
+      permalink: "https://mreinacampos.github.io//starclusters-in-jwst/galaxy_clusters/macs1423/"
+    },
+
+    {
+      name: "El Gordo",
+      redshift: "0.87",
+      status: "Available",
+      image: "/starclusters-in-jwst/assets/images/placeholder.png",
+      zenodo: "---",
+      permalink: "https://mreinacampos.github.io//starclusters-in-jwst/galaxy_clusters/elgordo/"
+    }
+
+  ];
+</script>
+
+<!-- Chart.js from CDN (stable major) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  (function(){
+    // Convert clusters to data points (skip invalid redshifts)
+    const points = clusters.map((c, i) => {
+      const z = parseFloat(String(c.redshift).replace(',', '.'));
+      return { x: isFinite(z) ? z : null, y: 0, index: i, label: c.name, image: c.image, zenodo: c.url_zenodo, permalink: c.permalink, status: c.status, rawRedshift: c.redshift };
+    }).filter(p => p.x !== null);
+
+    // Find axis bounds
+    const zs = points.map(p => p.x);
+    const minZ = zs.length ? Math.min(...zs) : 0;
+    const maxZ = zs.length ? Math.max(...zs) : 1;
+
+    // Build Chart
+    const ctx = document.getElementById('redshiftTimeline').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'scatter',
+      data: {
+        datasets: [{
+          label: 'Galaxy clusters (redshift)',
+          data: points,
+          backgroundColor: '#f39c12',
+          borderColor: '#ffffff55',
+          pointRadius: 8,
+          pointHoverRadius: 12,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 10, right: 10, bottom: 10, left: 10 } },
+        scales: {
+          x: {
+            type: 'linear',
+            position: 'bottom',
+            title: { display: true, text: 'Redshift (z)' },
+            min: Math.max(0, minZ - (maxZ - minZ) * 0.08),
+            max: maxZ + (maxZ - minZ) * 0.08
+          },
+          y: { display: false }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            enabled: false // we use an external hover preview
+          }
+        },
+        onHover(evt, active) {
+          // If hovering a point, update preview
+          if (active && active.length) {
+            const element = active[0];
+            const datasetIndex = element.datasetIndex;
+            const idx = element.index;
+            const point = chart.data.datasets[datasetIndex].data[idx];
+            updatePreview(point);
+          }
+        },
+        onClick(evt, activeEls) {
+          if (activeEls && activeEls.length) {
+            const el = activeEls[0];
+            const p = chart.data.datasets[el.datasetIndex].data[el.index];
+            const url = p.url_zenodo || p.permalink || '#';
+            window.open(url, '_blank', 'noopener');
+          }
+        }
+      });
+
+    // Find first cluster to initialize preview (prefer a numeric redshift)
+    function initializePreview() {
+      if (points.length) {
+        updatePreview(points[0]);
+      } else if (clusters.length) {
+        // fallback: use first cluster from front matter
+        const c = clusters[0];
+        updatePreview({ label: c.name, image: c.image, zenodo: c.url_zenodo, permalink: c.permalink, rawRedshift: c.redshift, status: c.status });
+      }
+    }
+
+    function updatePreview(point) {
+      const title = document.getElementById('previewTitle');
+      const img = document.getElementById('previewImage');
+      const redshift = document.getElementById('previewRedshift');
+      const status = document.getElementById('previewStatus');
+      const link = document.getElementById('previewLink');
+
+      title.textContent = point.label || 'Unknown';
+      img.src = point.image || '/assets/images/placeholder.png';
+      img.alt = (point.label || 'Cluster') + ' preview';
+      redshift.textContent = 'Redshift: ' + (point.rawRedshift !== undefined && point.rawRedshift !== "" ? point.rawRedshift : 'N/A');
+      status.textContent = 'Status: ' + (point.status || '—');
+      link.href = point.url_zenodo || point.permalink || '#';
+    }
+
+    // init
+    initializePreview();
+  })();
+</script>
 
 <table>
   <thead>
@@ -118,12 +344,12 @@
 
   <div class="wrapper">
 
-    <h2 class="footer-heading">Bright star clusters in JWST</h2>
+    <h2 class="footer-heading">RESCUE -- REdshifted Star ClUster Evolution</h2>
 
     <div class="footer-col-wrapper">
       <div class="footer-col footer-col-1">
         <ul class="contact-list">
-          <li class="p-name">Bright star clusters in JWST</li><li><a class="u-email" href="mailto:reinacampos@cita.utoronto.ca">reinacampos@cita.utoronto.ca</a></li></ul>
+          <li class="p-name">RESCUE -- REdshifted Star ClUster Evolution</li><li><a class="u-email" href="mailto:reinacampos@cita.utoronto.ca">reinacampos@cita.utoronto.ca</a></li></ul>
       </div>
 
       <div class="footer-col footer-col-2"><ul class="social-media-list"></ul>
