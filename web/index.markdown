@@ -14,6 +14,7 @@ layout: home
   /* small, self-contained styles — move to SCSS if desired */
   .timeline-wrapper { display:flex; gap:1.25rem; align-items:flex-start; margin-bottom:1.5rem; flex-wrap:wrap; }
   .timeline-canvas { flex:1 1 540px; min-width:320px; max-width:860px; background:transparent; padding:0.5rem; }
+  .timeline-canvas canvas { width:100%; height:240px; } /* ensure visible canvas height */
   .cluster-preview { width:240px; min-width:200px; background:rgba(255,255,255,0.02); border-radius:6px; padding:0.75rem; color:inherit; }
   .cluster-preview img { width:100%; height:auto; display:block; border-radius:4px; margin-bottom:0.5rem; object-fit:cover; background:#0b1720; }
   .cluster-meta { font-size:0.92rem; line-height:1.25; }
@@ -64,10 +65,28 @@ layout: home
       return { x: isFinite(z) ? z : null, y: 0, index: i, label: c.name, image: c.image, zenodo: c.url_zenodo, permalink: c.permalink, status: c.status, rawRedshift: c.redshift };
     }).filter(p => p.x !== null);
 
-    // Find axis bounds
+    // Debug: confirm data
+    console.debug('clusters:', clusters);
+    console.debug('points (plottable):', points);
+
+    // Find axis bounds robustly (handle case min === max)
     const zs = points.map(p => p.x);
-    const minZ = zs.length ? Math.min(...zs) : 0;
-    const maxZ = zs.length ? Math.max(...zs) : 1;
+    let minZ = 0, maxZ = 1;
+    if (zs.length) {
+      const zmin = Math.min(...zs);
+      const zmax = Math.max(...zs);
+      if (Math.abs(zmax - zmin) < 1e-6) {
+        // single-value case -> add small padding
+        minZ = Math.max(0, zmin - 0.5);
+        maxZ = zmax + 0.5;
+      } else {
+        const pad = (zmax - zmin) * 0.08;
+        minZ = Math.max(0, zmin - pad);
+        maxZ = zmax + pad;
+      }
+    }
+
+    console.debug('x-axis bounds:', { minZ, maxZ });
 
     // Build Chart
     const ctx = document.getElementById('redshiftTimeline').getContext('2d');
@@ -86,42 +105,42 @@ layout: home
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: { mode: 'nearest', intersect: true },
         layout: { padding: { top: 10, right: 10, bottom: 10, left: 10 } },
         scales: {
           x: {
             type: 'linear',
             position: 'bottom',
             title: { display: true, text: 'Redshift (z)' },
-            min: Math.max(0, minZ - (maxZ - minZ) * 0.08),
-            max: maxZ + (maxZ - minZ) * 0.08
+            min: minZ,
+            max: maxZ
           },
           y: { display: false }
         },
         plugins: {
           legend: { display: false },
-          tooltip: {
-            enabled: false // we use an external hover preview
-          }
+          tooltip: { enabled: false } // we use an external hover preview
         },
-        onHover(evt, active) {
-          // If hovering a point, update preview
-          if (active && active.length) {
-            const element = active[0];
-            const datasetIndex = element.datasetIndex;
-            const idx = element.index;
-            const point = chart.data.datasets[datasetIndex].data[idx];
+        // Chart.js callback signatures: (event, elements)
+        onHover(evt, elements) {
+          if (elements && elements.length) {
+            const el = elements[0];
+            const ds = el.datasetIndex;
+            const idx = el.index;
+            const point = chart.data.datasets[ds].data[idx];
             updatePreview(point);
           }
         },
-        onClick(evt, activeEls) {
-          if (activeEls && activeEls.length) {
-            const el = activeEls[0];
+        onClick(evt, elements) {
+          if (elements && elements.length) {
+            const el = elements[0];
             const p = chart.data.datasets[el.datasetIndex].data[el.index];
             const url = p.url_zenodo || p.permalink || '#';
             window.open(url, '_blank', 'noopener');
           }
         }
-      });
+      }
+    });
 
     // Find first cluster to initialize preview (prefer a numeric redshift)
     function initializePreview() {

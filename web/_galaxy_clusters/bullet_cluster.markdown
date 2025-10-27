@@ -6,4 +6,5 @@ layout: page
 url_zenodo: "---"
 corresponding_author: Bill Harris
 references:
+image: "assets/images/bullet_cluster.png"
 ---
