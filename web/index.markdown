@@ -108,7 +108,7 @@ layout: home
 
   /* when highlighted, keep transform behavior but ensure stacked layout remains centered */
   .cluster-snippet.highlight {
-    transform: translateX(-50%) scale(1.06);
+    transform: translateX(-50%) scale(1.1);
     box-shadow: 0 8px 20px rgba(0,0,0,0.45);
     z-index:5;
   }
@@ -129,7 +129,7 @@ layout: home
       {% assign r = forloop.index0 | modulo: 2 %}
       <div class="cluster-snippet {% if r == 0 %}top{% else %}bottom{% endif %}" data-index="{{ forloop.index0 }}">
         <a class="thumb-link" href="{{ g.url_zenodo | default: g.url | relative_url }}" target="_blank" rel="noopener">
-          <img src="{{ g.image | default: g.jwst_image | default: g.thumbnail | default: '/assets/images/placeholder.png' | relative_url }}" alt="{{ g.name | escape }}"/>
+          <!-- get rid of the image for now <img src="{{ g.image | default: g.jwst_image | default: g.thumbnail | default: '/assets/images/placeholder.png' | relative_url }}" alt="{{ g.name | escape }}"/> -->
         </a>
         <a class="name" href="{{ g.url_zenodo | default: g.url | relative_url }}" target="_blank" rel="noopener">{{ g.name | escape }}</a>
       </div>
@@ -194,10 +194,10 @@ layout: home
 
     const dataset = {
       label: 'Galaxy clusters (redshift)',
-      data: plottable.map(p => ({ x: p.x, y: 0, index: p.index, label: p.label, image: p.image, permalink: p.permalink, rawRedshift: p.rawRedshift })),
+      data: plottable.map(p => ({ x: p.x, y: 0+28, index: p.index, label: p.label, image: p.image, permalink: p.permalink, rawRedshift: p.rawRedshift })),
       backgroundColor: 'black',
       borderColor: 'black',
-      pointRadius: 6,
+      pointRadius: 3,
       pointHoverRadius: 10,
     };
 
@@ -211,7 +211,7 @@ layout: home
         const shaftHeight = options.shaftHeight || 4;
         const headWidth = options.headWidth || 18;
         const headHeight = options.headHeight || 18;
-        const y = Math.round((ca.top + ca.bottom) / 2);
+        const y = Math.round((ca.top + ca.bottom) / 2) + 28;
         ctx.fillStyle = options.color || 'black';
         const shaftLeft = ca.left + headWidth;
         const shaftRight = ca.right;
@@ -305,8 +305,8 @@ layout: home
         const snippetRect = el.getBoundingClientRect();
         const sideTop = (idx % 2 === 0) || el.classList.contains('top');
         const topValue = sideTop
-          ? (chartRect.top - wrapperRect.top) - snippetRect.height - 8
-          : (chartRect.bottom - wrapperRect.top) + 8;
+          ? (chartRect.top - wrapperRect.top) - snippetRect.height - 8 + (idx * 5)
+          : (chartRect.bottom - wrapperRect.top) + 8 + (idx * 5);
         el.style.top = Math.max(-10, Math.min(topValue, wrapper.clientHeight - 6)) + 'px';
         // store for collision resolution
         const item = { el, left: px, width: snippetRect.width, idx, sideTop };
@@ -348,33 +348,38 @@ layout: home
       resolveCollisions(topGroup);
       resolveCollisions(bottomGroup);
 
-      // draw connectors from plotted points to snippet centers
-      ctx2.lineWidth = 1.25;
-      ctx2.strokeStyle = 'rgba(0,0,0,0.95)';
-      ctx2.fillStyle = 'rgba(0,0,0,0.95)';
+      // compute arrow Y once (in wrapper coordinates) so connectors and points align exactly
+      const ca = chart.chartArea;
+      const arrowOffset = (chart.options && chart.options.plugins && chart.options.plugins.horizontalArrow && chart.options.plugins.horizontalArrow.offsetY) ? chart.options.plugins.horizontalArrow.offsetY : 0;
+      const arrowMidInCanvas = Math.round((ca.top + ca.bottom) / 2) + arrowOffset;
+      const arrowY = (chartRect.top - wrapperRect.top) + arrowMidInCanvas + 28;
 
       // use dataset points to draw connectors
       const ds = chart.data.datasets[0];
+      const meta = chart.getDatasetMeta(0);
       ds.data.forEach(d => {
-        // get dataset element (rendered point) for matching index
-        const meta = chart.getDatasetMeta(0);
+        // find rendered point element that matches this data index
         const pIndex = meta.data.findIndex(el => el && el.$context && el.$context.raw && el.$context.raw.index === d.index);
         if (pIndex === -1) return;
         const elPoint = meta.data[pIndex];
         if (!elPoint) return;
         const pointX = (chartRect.left - wrapperRect.left) + elPoint.x;
-        const pointY = (chartRect.top - wrapperRect.top) + elPoint.y;
 
         const snippetEl = snippetsOverlay.querySelector(`.cluster-snippet[data-index="${d.index}"]`);
         if (!snippetEl) return;
         const snippetRect = snippetEl.getBoundingClientRect();
         const toX = snippetRect.left - wrapperRect.left + snippetRect.width / 2;
-        const toY = snippetRect.top - wrapperRect.top + snippetRect.height / 2;
+
+        // draw to bottom center if the snippet is 'top', otherwise draw to top center
+        const isTopSnippet = snippetEl.classList.contains('top');
+        const toY = isTopSnippet
+          ? (snippetRect.top - wrapperRect.top + snippetRect.height) // bottom center of top snippet
+          : (snippetRect.top - wrapperRect.top);                      // top center of bottom snippet
 
         ctx2.beginPath();
-        ctx2.moveTo(pointX, pointY);
+        ctx2.moveTo(pointX, arrowY);
         const midX = (pointX + toX) / 2;
-        ctx2.bezierCurveTo(midX, pointY, midX, toY, toX, toY);
+        ctx2.bezierCurveTo(midX, arrowY, midX, toY, toX, toY);
         ctx2.stroke();
 
         ctx2.beginPath();
@@ -382,16 +387,15 @@ layout: home
         ctx2.fill();
       });
 
-      // redraw points on overlay so they appear above connectors/arrow
+      // redraw points on overlay so they appear above connectors/arrow — align to arrowY
       ctx2.save();
       ctx2.fillStyle = 'black';
       ctx2.strokeStyle = 'white';
       ctx2.lineWidth = 1.5;
-      const meta = chart.getDatasetMeta(0);
       meta.data.forEach(ptEl => {
         if (!ptEl) return;
         const px = (chartRect.left - wrapperRect.left) + ptEl.x;
-        const py = (chartRect.top - wrapperRect.top) + ptEl.y;
+        const py = arrowY; // align dot vertically with arrow
         const r = 6;
         ctx2.beginPath();
         ctx2.arc(px, py, r, 0, Math.PI * 2);
