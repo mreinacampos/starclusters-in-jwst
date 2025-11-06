@@ -5,8 +5,8 @@ _site
 vendor
 
 # ignore the raw data and the outputs in the comparison folders
-./code_poisson_comparison/*/data
-./code_poisson_comparison/*/imgs
-./code_poisson_comparison/*/tables
+./code_poisson_comparison/abell2744/data/
+./code_poisson_comparison/abell2744/imgs/
+./code_poisson_comparison/abell2744/tables/
 
 
