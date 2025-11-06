@@ -3,3 +3,10 @@ _site
 .jekyll-cache
 .jekyll-metadata
 vendor
+
+# ignore the raw data and the outputs in the comparison folders
+./code_poisson_comparison/*/data
+./code_poisson_comparison/*/imgs
+./code_poisson_comparison/*/tables
+
+
