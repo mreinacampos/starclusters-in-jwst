@@ -1,6 +1,5 @@
 # RESCUE - REdshifted Star ClUster Exploration
-## Author: Marta Reina-Campos
-## Date: November 2025
+Marta Reina-Campos (November 2025)
 ---
 
 Main repository of the website for the RESCUE collaboration, and of the scripts to compare an observed distribution of GCs against different galactic components.
