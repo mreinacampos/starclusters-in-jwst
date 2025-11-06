@@ -11,6 +11,7 @@ from master_class_galaxy_cluster import GalaxyCluster
 from master_class_gcs import GCs
 from master_functions_abell2744 import MapLoaders
 
+
 class LambdaMap(MapLoaders):
     """This top-level class is used to define the routines that LambdaMaps need to have.
 
@@ -80,7 +81,6 @@ class LensingMap(LambdaMap):
             print(
                 "[LensingMap/__init__] This type of LensingMap wasn't recognized. Please, check the kind of map you're trying to load."
             )
-
 
     def create_uniform_distribution(
         self, num_pix: tuple[int, int]
@@ -194,7 +194,6 @@ class StellarLightMap(LambdaMap):
         self.wcs, self.header, self.img = self.load_stellar_light_map(kind)
 
 
-
 class XrayMap(LambdaMap):
     """This class is used to instantiate the X-ray map against which we'll compare the GC sample against.
 
@@ -211,4 +210,3 @@ class XrayMap(LambdaMap):
 
         # load the actual mosaic and their header and WCS
         self.wcs, self.header, self.img = self.load_xray_map()
-

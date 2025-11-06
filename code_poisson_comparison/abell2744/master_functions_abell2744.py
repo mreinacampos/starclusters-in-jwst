@@ -15,12 +15,12 @@ class MapLoaders:
     """Mixin providing loader routines for different map types.
     Put any loading / creation routine here so users can edit them in one place.
     """
-    
-    def load_gc_luminosity_function_parameters(self)-> tuple[float, float]:
+
+    def load_gc_luminosity_function_parameters(self) -> tuple[float, float]:
         """Function to load the parameters of the GCLF for Abell 2744 from Harris et al. (2023)"""
         # peak magnitude and dispersion of the GCLF in the F150W filter
-        m0 = 31.76  # peak magnitude
-        sigma = 1.4  # dispersion of the GCLF
+        m0 = 31.76 * u.ABmag  # peak magnitude
+        sigma = 1.4 * u.ABmag  # dispersion of the GCLF
         return m0, sigma
 
     def load_gc_catalogue(self) -> Table:
@@ -30,7 +30,7 @@ class MapLoaders:
         ls_files = glob.glob(
             os.path.join(inpath, "2404_00_catalogue_GCs_A2744_originalmosaic_psky*")
         )
-        
+
         # read the photometric catalogue -- frame: fk5
         gc_catalogue = Table.read(
             ls_files[0],
@@ -68,12 +68,12 @@ class MapLoaders:
         K_F200 = 0.42
         # coordinates in physical units
         image_angular_size = 92 * u.parsec / u.pixel  # pc per pixel
-        gc_catalogue["x[orig kpc]"] = (gc_catalogue["x[orig px]"] * image_angular_size).to(
-            u.kpc
-        )
-        gc_catalogue["y[orig kpc]"] = (gc_catalogue["y[orig px]"] * image_angular_size).to(
-            u.kpc
-        )
+        gc_catalogue["x[orig kpc]"] = (
+            gc_catalogue["x[orig px]"] * image_angular_size
+        ).to(u.kpc)
+        gc_catalogue["y[orig kpc]"] = (
+            gc_catalogue["y[orig px]"] * image_angular_size
+        ).to(u.kpc)
         # K-corrected apparent magnitudes
         gc_catalogue["F115W0"] = gc_catalogue["F115W"] + K_F115
         gc_catalogue["F150W0"] = gc_catalogue["F150W"] + K_F150
@@ -98,7 +98,7 @@ class MapLoaders:
         gc_catalogue["Zone"][(numpy.log10(gc_catalogue["sigsky"]) > 2.4)] = 4
 
         # log10 of the local sky noise
-        gc_catalogue["log10sigsky"] = numpy.log10(gc_catalogue["sigsky"]) 
+        gc_catalogue["log10sigsky"] = numpy.log10(gc_catalogue["sigsky"])
 
         # mask objects with colours outside of the range -1.2 < (F115W0-F150W0) < 1.2
         mask = (gc_catalogue["F115W0"] - gc_catalogue["F150W0"] > -1.2) & (
@@ -106,8 +106,10 @@ class MapLoaders:
         )
 
         return gc_catalogue[mask]
-    
-    def create_mask_for_gc_sample(self, gcs_name: str, gc_catalogue: Table) -> numpy.ndarray:
+
+    def create_mask_for_gc_sample(
+        self, gcs_name: str, gc_catalogue: Table
+    ) -> numpy.ndarray:
         """Create the mask for the GCs catalogue based on the sample of GCs"""
         if gcs_name == "Bright GCs":
             mask = gc_catalogue["F150W"].to(u.ABmag) < 29.5 * u.ABmag
@@ -164,7 +166,7 @@ class MapLoaders:
 
         unit = u.dimensionless_unscaled
         return wcs.WCS(header), header, img * unit
-    
+
     # converts the convergence map as projected mass surface density and their header and WCS for the chosen lensing model
     def convert_to_projected_mass(self, galaxy_cluster: GalaxyCluster) -> None:
         """Convert the converenge map to a projected mass surface density.

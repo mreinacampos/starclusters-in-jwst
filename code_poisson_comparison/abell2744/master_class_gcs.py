@@ -12,6 +12,8 @@ from matplotlib.path import Path
 from master_class_galaxy_cluster import GalaxyCluster
 from master_functions_abell2744 import MapLoaders
 from astropy.coordinates import SkyCoord
+
+
 class DataPoints(MapLoaders):
     """This class is used to instantiate a sample of data points with RA and DEC.
 
@@ -69,21 +71,33 @@ class GCs(MapLoaders):
 
     @u.quantity_input
     def __init__(
-        self,
-        name: str,
-        label: str,
-        galaxy_cluster: GalaxyCluster
+        self, name: str, label: str, galaxy_cluster: GalaxyCluster, **kwargs
     ) -> None:
-        
         # initialise the relevant parameters
         self.name = name
         self.label = label
         print("[GCs] Initialising the sample of GCs: {:s}".format(self.name))
+
+        if "Dummy" in self.name:
+            print("[GCs] Dummy sample selected -- no catalogue will be loaded.")
+            self.gc_catalogue = None
+            self.mask_catalogue = None
+            self.ra = kwargs.get("ra", numpy.array([]) * u.deg)
+            self.dec = kwargs.get("dec", numpy.array([]) * u.deg)
+            self.f150w = kwargs.get("f150w", numpy.array([]) * u.ABmag)
+            self.log10sigsky = kwargs.get(
+                "log10sigsky", numpy.array([]) * u.dimensionless_unscaled
+            )
+            self.prob = kwargs.get("prob", numpy.array([]) * u.dimensionless_unscaled)
+            return
+
         # load the GC catalogue
         self.gc_catalogue = self.load_gc_catalogue()
 
         # create the mask for the chosen sample of GCs
-        self.mask_catalogue = self.create_mask_for_gc_sample(self.name, self.gc_catalogue)
+        self.mask_catalogue = self.create_mask_for_gc_sample(
+            self.name, self.gc_catalogue
+        )
 
         # determine the coordinates of the GCs
         coords_gcs = SkyCoord(
@@ -96,18 +110,26 @@ class GCs(MapLoaders):
         self.ra = coords_gcs.ra  # right ascension in the J2000 - FK5 reference frame
         self.dec = coords_gcs.dec  # declination in the J2000 - FK5 reference frame
         self.kind = "globular clusters"
-        self.f150w = self.gc_catalogue[self.mask_catalogue]["F150W"]  # magnitude in the F150W filter
+        self.f150w = (
+            self.gc_catalogue[self.mask_catalogue]["F150W"] * u.ABmag
+        )  # magnitude in the F150W filter
         self.log10sigsky = (
-            self.gc_catalogue[self.mask_catalogue]["log10sigsky"] * u.dimensionless_unscaled
+            self.gc_catalogue[self.mask_catalogue]["log10sigsky"]
+            * u.dimensionless_unscaled
         )  # log10 of the local sky noise
-        self.prob = self.gc_catalogue[self.mask_catalogue]["prob"]  # probability of recovery for every GC
+        self.prob = (
+            self.gc_catalogue[self.mask_catalogue]["prob"] * u.dimensionless_unscaled
+        )  # probability of recovery for every GC
 
         # create a header and wcs object for the GCs - dummy pixel size
         self.wcs, self.header = self.create_wcs_and_header(numpy.ones(shape=(400, 900)))
 
         # initialize the parameters from the luminosity function
-        self.luminosity_function_mean_mag, self.luminosity_function_sigma_mag = self.load_gc_luminosity_function_parameters()
- 
+        (
+            self.luminosity_function_mean_mag,
+            self.luminosity_function_sigma_mag,
+        ) = self.load_gc_luminosity_function_parameters()
+
     def create_wcs_and_header(self, img: numpy.ndarray) -> tuple[wcs.WCS, fits.Header]:
         """Return the WCS and header for a given sample of GCs and number of pixels."""
 

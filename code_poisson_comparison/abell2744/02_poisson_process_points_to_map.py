@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.17.2"
+__generated_with = "0.17.7"
 app = marimo.App(width="full")
 
 
@@ -12,9 +12,9 @@ def _(mo):
 
     Notebook to calculate the log-likelihood of a given GC population to have been spawned from a continuous map/image assuming an inhomogenous Poisson point process
 
-    Main assumption: GCs are independently distributed following an inhomogeneous Poisson process where the rate is set by a continuous image 
-    (e.g., a convergence map from lensing, a mass map from dynamics, etc.). 
-    Given a set of observed GCs and a map, this notebook calculates the log-likehood of such an event under the continuous assumption 
+    Main assumption: GCs are independently distributed following an inhomogeneous Poisson process where the rate is set by a continuous image
+    (e.g., a convergence map from lensing, a mass map from dynamics, etc.).
+    Given a set of observed GCs and a map, this notebook calculates the log-likehood of such an event under the continuous assumption
     (i.e. each independent Borel set contains a single GC).
 
     Inputs:
@@ -24,12 +24,11 @@ def _(mo):
         * from the UNCOVER team - Furtak+ 2023
         * from Cha+ 2023 -- combining strong and weak lensing constraints
         * from Bergamini + 2023b
-      * Stellar light from JWST NIRCam imaging of Abell 2744 
+      * Stellar light from JWST NIRCam imaging of Abell 2744
       * X-ray maps from Chandra observations of Abell 2744
 
     Outputs:
     * Log-likelihood values for each GC population and each lambda map
-
     """
     )
     return
@@ -37,7 +36,11 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    mo.md(r"""## Decide the type of analysis""")
+    mo.md(
+        r"""
+    ## Decide the type of analysis
+    """
+    )
     return
 
 
@@ -48,7 +51,7 @@ def _(os):
     # decide whether to be verbose or not
     do_verbose = True
     # create the output path for the tables
-    out_path = os.path.join(".", "tables_points_to_maps")
+    out_path = os.path.join(".", "tables", "points_to_maps")
     if not os.path.exists(out_path):
         os.makedirs(out_path)
 
@@ -116,7 +119,11 @@ def _(os):
 
 @app.cell
 def _(mo):
-    mo.md(r"""## Define properties of the galaxy cluster""")
+    mo.md(
+        r"""
+    ## Define properties of the galaxy cluster
+    """
+    )
     return
 
 
@@ -141,14 +148,17 @@ def _(GalaxyCluster, u):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""## Main program""")
+    mo.md(
+        r"""
+    ## Main program
+    """
+    )
     return
 
 
 @app.cell
 def _(
     GCs,
-    SkyCoord,
     Table,
     abell2744,
     do_figures,
@@ -158,45 +168,22 @@ def _(
     ls_lambda_map,
     ls_lambda_type,
     mfc,
-    mfgc,
     mvf,
-    numpy,
     os,
     out_path,
     time,
-    u,
 ):
     # loop over the different types of maps
     for gcs_name, gcs_label in zip(ls_gcs_populations, ls_gcs_labels):
-        # 2: create the GC catalogue from Harris & Reina-Campos 2024
-        # load the GC catalogue from Harris & Reina-Campos 2024
-        gc_catalogue = mfgc.load_gc_catalogue()
-
-        # prepare the right mask based on the sample of GCs
-        mask = mfgc.create_mask_for_gc_sample(gcs_name, gc_catalogue)
-
-        # determine the coordinates of the GCs
-        coords_gcs = SkyCoord(
-            ra=gc_catalogue[mask]["RA [J2000]"],
-            dec=gc_catalogue[mask]["DEC [J2000]"],
-            frame="fk5",
-            distance=abell2744.distance,
-        )
-
+        print("\n========================================")
         # create the dictionary to store the results
         dict_results = {}
 
         for do_lambda_map, type_map in zip(ls_lambda_map, ls_lambda_type):
-            print(f"\n*** {gcs_name}--{do_lambda_map} for {mask.sum()} GCs")
             # create the instance of the GCs class
-            bright_gcs = GCs(
-                gcs_name,
-                gcs_label,
-                coords_gcs.ra.to("deg"),
-                coords_gcs.dec.to("deg"),
-                gc_catalogue[mask]["F150W"].to(u.ABmag),
-                numpy.log10(gc_catalogue[mask]["sigsky"].value),
-                gc_catalogue[mask]["prob"],
+            bright_gcs = GCs(gcs_name, gcs_label, abell2744)
+            print(
+                f"\n*** {gcs_name}--{do_lambda_map} for {bright_gcs.mask_catalogue.sum()} GCs"
             )
 
             # create the instance of the lensing map class
@@ -244,20 +231,28 @@ def _(
             # delete the objects to free up memory
             del bright_gcs, lambda_map, ln_prob, table
         # delete variables to free up memory
-        del gc_catalogue, coords_gcs, dict_results
+        del dict_results
     print("\n")
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(r"""## Functions""")
+    mo.md(
+        r"""
+    ## Functions
+    """
+    )
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(r"""# Modules""")
+    mo.md(
+        r"""
+    # Modules
+    """
+    )
     return
 
 
@@ -276,20 +271,7 @@ def _():
     import master_functions_continuous as mfc
     import master_functions_abell2744 as mfgc
 
-    return (
-        GCs,
-        GalaxyCluster,
-        SkyCoord,
-        Table,
-        mfc,
-        mfgc,
-        mo,
-        mvf,
-        numpy,
-        os,
-        time,
-        u,
-    )
+    return GCs, GalaxyCluster, Table, mfc, mo, mvf, os, time, u
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.17.6"
+__generated_with = "0.17.2"
 app = marimo.App(width="full")
 
 
@@ -23,11 +23,7 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-    ## Decide the type of analysis
-    """
-    )
+    mo.md(r"""## Decide the type of analysis""")
     return
 
 
@@ -41,7 +37,7 @@ def _(os):
     do_verbose = False
 
     # create the output path
-    out_path = os.path.join(".", "tables_maps_to_maps")
+    out_path = os.path.join(".", "tables", "maps_to_maps")
     if not os.path.exists(out_path):
         os.makedirs(out_path)
 
@@ -113,7 +109,12 @@ def _(os):
 
 
 @app.cell
-def _():
+def _(mo):
+    _df = mo.sql(
+        f"""
+
+        """
+    )
     return
 
 
@@ -150,11 +151,7 @@ def _(GalaxyCluster, u):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-    ## Main program
-    """
-    )
+    mo.md(r"""## Main program""")
     return
 
 
@@ -162,7 +159,6 @@ def _(mo):
 def _(
     FitsMap,
     GCs,
-    SkyCoord,
     Table,
     abell2744,
     do_figures,
@@ -173,7 +169,6 @@ def _(
     ls_lambda_map,
     ls_lambda_type,
     mfc,
-    mfgc,
     mpl,
     mvf,
     number_iterations,
@@ -188,31 +183,8 @@ def _(
 ):
     # loop over each GC sample - it defines the number of data points to spawn
     for gcs_name, gcs_label in zip(ls_gcs_populations, ls_gcs_labels):
-        # 2: create the GC catalogue from Harris & Reina-Campos 2024
-        # load the GC catalogue from Harris & Reina-Campos 2024
-        gc_catalogue = mfgc.load_gc_catalogue()
-
-        # prepare the right mask based on the sample of GCs
-        mask = mfgc.create_mask_for_gc_sample(gcs_name, gc_catalogue)
-
-        # determine the coordinates of the GCs
-        coords_gcs = SkyCoord(
-            ra=gc_catalogue[mask]["RA [J2000]"],
-            dec=gc_catalogue[mask]["DEC [J2000]"],
-            frame="fk5",
-            distance=abell2744.distance,
-        )
-
-        # create the instance of the GCs class
-        bright_gcs = GCs(
-            gcs_name,
-            gcs_label,
-            coords_gcs.ra.to("deg"),
-            coords_gcs.dec.to("deg"),
-            gc_catalogue[mask]["F150W"].to(u.ABmag),
-            numpy.log10(gc_catalogue[mask]["sigsky"].value),
-            gc_catalogue[mask]["prob"],
-        )
+        # 2: create the instance of the GCs class
+        bright_gcs = GCs(gcs_name, gcs_label, abell2744)
 
         # decide how many data points to spawn
         number_gcs = len(bright_gcs.f150w)
@@ -248,7 +220,7 @@ def _(
 
                 # read the local sky noise map -- MRC - to be updated
                 fname = os.path.join(
-                    "..", "00_Data", "A2744_Harris23_GCs", "2508_skynoise_grid.fits"
+                    ".", "data", "GCs_Harris23", "2508_skynoise_grid.fits"
                 )
                 map_sky_noise = FitsMap(fname)
                 map_prob_recovery = FitsMap(fname)
@@ -577,10 +549,10 @@ def _(
                 start = time.time()
                 gnr_f150w = mfc.spawn_magnitudes(
                     number_gcs * number_iterations,
-                    min_mag = bright_gcs.f150w.min(),
-                    max_mag = bright_gcs.f150w.max(), 
-                    m0 = bright_gcs.luminosity_function_mean_mag,
-                    sigma = bright_gcs.luminosity_function_sigma_mag,
+                    min_mag=bright_gcs.f150w.min(),
+                    max_mag=bright_gcs.f150w.max(),
+                    m0=bright_gcs.luminosity_function_mean_mag,
+                    sigma=bright_gcs.luminosity_function_sigma_mag,
                     do_verbose=do_verbose,
                 )
                 print(
@@ -618,11 +590,12 @@ def _(
                     datapoints = GCs(
                         "Dummy datapoints",
                         "Dummy datapoints",
-                        coords[0],
-                        coords[1],
-                        f150w,
-                        log10sigsky,
-                        prob_recovery,
+                        abell2744,
+                        ra=coords[0],
+                        dec=coords[1],
+                        f150w=f150w,
+                        log10sigsky=log10sigsky,
+                        prob=prob_recovery,
                     )
                     if do_verbose:
                         print(
@@ -682,17 +655,13 @@ def _(
 
             del lambda_map1, lambda_map2
         # delete the variables to save memory
-        del bright_gcs, coords_gcs, gc_catalogue
+        del bright_gcs
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-    ## Functions
-    """
-    )
+    mo.md(r"""## Functions""")
     return
 
 
@@ -816,17 +785,18 @@ def _(skimage, wcs):
 
 
 @app.cell
-def _():
+def _(mo):
+    _df = mo.sql(
+        f"""
+
+        """
+    )
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
-    # Modules
-    """
-    )
+    mo.md(r"""# Modules""")
     return
 
 
@@ -864,10 +834,8 @@ def _():
         FitsMap,
         GCs,
         GalaxyCluster,
-        SkyCoord,
         Table,
         mfc,
-        mfgc,
         mo,
         mpl,
         mvf,
