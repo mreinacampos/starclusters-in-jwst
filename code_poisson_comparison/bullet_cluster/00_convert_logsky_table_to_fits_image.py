@@ -23,7 +23,10 @@ def _(SkyCoord, ascii, create_fits_image, fits, numpy, os, plt, u, wcs):
     # define the filename and read the table
     fname = os.path.join(".", "data", "GCs_Harris26", "skymatrix.txt")
     table = ascii.read(
-        fname, names=["RA", "DEC", "x (px)", "y (px)", "log(sigsky)"], guess=False, fast_reader=False
+        fname,
+        names=["RA", "DEC", "x (px)", "y (px)", "log(sigsky)"],
+        guess=False,
+        fast_reader=False,
     )
 
     # redefine the coordinates -- now pixels of the image
@@ -348,6 +351,7 @@ def _(Table, fits, numpy):
         hdul = fits.HDUList([primary_hdu])
         hdul.writeto(fname, overwrite=True)
         print("Saved {:s}".format(fname))
+
     return (create_fits_image,)
 
 

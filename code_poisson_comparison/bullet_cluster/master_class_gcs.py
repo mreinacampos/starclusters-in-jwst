@@ -10,7 +10,9 @@ from astropy import wcs
 from astropy import units as u
 from matplotlib.path import Path
 from master_class_galaxy_cluster import GalaxyCluster
-from code_poisson_comparison.bullet_cluster.master_functions_bullet_cluster import GCLoaders
+from code_poisson_comparison.bullet_cluster.master_functions_bullet_cluster import (
+    GCLoaders,
+)
 from astropy.coordinates import SkyCoord
 
 

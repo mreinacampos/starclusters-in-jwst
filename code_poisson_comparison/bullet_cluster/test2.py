@@ -7,9 +7,12 @@ app = marimo.App(width="medium")
 @app.cell
 def _():
     import matplotlib
+
     matplotlib.use("module://matplotlib_inline.backend_inline")
     import matplotlib.pyplot as plt
-    plt.plot([0,1]); plt.show()
+
+    plt.plot([0, 1])
+    plt.show()
 
     return
 

@@ -9,7 +9,9 @@ from astropy import wcs, constants
 from astropy import units as u
 from master_class_galaxy_cluster import GalaxyCluster
 from master_class_gcs import GCs
-from code_poisson_comparison.bullet_cluster.master_functions_bullet_cluster import LambdaMapLoaders
+from code_poisson_comparison.bullet_cluster.master_functions_bullet_cluster import (
+    LambdaMapLoaders,
+)
 
 
 class LambdaMap(LambdaMapLoaders):
