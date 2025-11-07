@@ -6,7 +6,8 @@ app = marimo.App(width="full")
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     # Point-to-map comparisons via an inhomogeneous Poisson point process
 
     Notebook to calculate the log-likelihood of a given GC population to have been spawned from a continuous map/image assuming an inhomogenous Poisson point process
@@ -28,15 +29,18 @@ def _(mo):
 
     Outputs:
     * Log-likelihood values for each GC population and each lambda map
-    """)
+    """
+    )
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Decide the type of analysis
-    """)
+    """
+    )
     return
 
 
@@ -96,8 +100,8 @@ def _(os):
         "lensing map",
     ]
 
-    #ls_lambda_map = ["uniform", "X-ray"]
-    #ls_lambda_type = ["uniform map", "xray map"]
+    # ls_lambda_map = ["uniform", "X-ray"]
+    # ls_lambda_type = ["uniform map", "xray map"]
     return (
         do_figures,
         do_verbose,
@@ -111,9 +115,11 @@ def _(os):
 
 @app.cell
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Define properties of the galaxy cluster
-    """)
+    """
+    )
     return
 
 
@@ -138,9 +144,11 @@ def _(GalaxyCluster, u):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Main program
-    """)
+    """
+    )
     return
 
 
@@ -184,9 +192,7 @@ def _(
             bright_gcs.mask_objects_outside_lambda_map(lambda_map.wcs)
 
             # read the local sky noise map -- MRC - to be updated
-            fname = os.path.join(
-                ".", "data", "GCs_Harris23", "2508_skynoise_grid.fits"
-            )
+            fname = os.path.join(".", "data", "GCs_Harris23", "2508_skynoise_grid.fits")
             map_sky_noise = FitsMap(fname)
             print(
                 f"[main] The local sky noise image ranges between {map_sky_noise.img.min()} and {map_sky_noise.img.max()}."
@@ -225,11 +231,11 @@ def _(
             print(
                 f"[main] Normalization factor for {do_lambda_map} is {normalization:.4e}"
             )
-        
+
             start = time.time()
             ### Calculate the Poisson probability of observing the GCs given the lambda map and the selection function
             ln_prob = mfc.calculate_continuous_spatial_poisson_probability(
-                normalization,lambda_map, bright_gcs, do_verbose=do_verbose
+                normalization, lambda_map, bright_gcs, do_verbose=do_verbose
             )
             dict_results[do_lambda_map] = [ln_prob]
             print(
@@ -270,17 +276,21 @@ def _(
 
 @app.cell
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Functions
-    """)
+    """
+    )
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     # Modules
-    """)
+    """
+    )
     return
 
 
@@ -299,6 +309,7 @@ def _():
     import master_functions_discrete as mfd
     import master_functions_continuous as mfc
     import master_functions_abell2744 as mfgc
+
     return FitsMap, GCs, GalaxyCluster, Table, mfc, mo, mvf, os, time, u
 
 

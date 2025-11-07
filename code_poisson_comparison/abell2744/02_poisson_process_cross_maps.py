@@ -6,7 +6,8 @@ app = marimo.App(width="full")
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     # Model testing: Cross-maps comparisons
 
     In order to tests the models used, we need to calculate the expected distribution of probability in the ideal case: "For a given model, what if all GCs were observed?"
@@ -15,15 +16,18 @@ def _(mo):
     We can also change the number of data points that we spawn, to test the convergence of the results.
 
     We can also use this technique to do cross-model validation: e.g. spawn from the noisy/uniform map and compare to any of the convergence maps.
-    """)
+    """
+    )
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Decide the type of analysis
-    """)
+    """
+    )
     return
 
 
@@ -91,8 +95,8 @@ def _(os):
         "lensing map",
     ]
 
-    #ls_lambda_map = ["uniform", "X-ray"]
-    #ls_lambda_type = ["uniform map", "xray map"]
+    # ls_lambda_map = ["uniform", "X-ray"]
+    # ls_lambda_type = ["uniform map", "xray map"]
 
     # ls_lambda_map = ["X-ray"]
     # ls_lambda_type = ["xray map"]
@@ -120,11 +124,13 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Define the properties of the galaxy cluster
 
     Needed to re-scale the images from pixels to coordinates
-    """)
+    """
+    )
     return
 
 
@@ -149,9 +155,11 @@ def _(GalaxyCluster, u):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Main program
-    """)
+    """
+    )
     return
 
 
@@ -248,7 +256,7 @@ def _(
                     rebin_sky_noise_img_map1,
                     rebin_sky_noise_wcs_map1,
                     rebin_sky_noise_hdr_map1,
-                ) =  mfc.reduce_and_rebin_image(lambda_map1, map_sky_noise)
+                ) = mfc.reduce_and_rebin_image(lambda_map1, map_sky_noise)
 
                 # calculate the map of the probability of recovery given the rebinned local sky noise map
                 map_prob_recovery = FitsMap(fname)
@@ -623,9 +631,11 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Functions
-    """)
+    """
+    )
     return
 
 
@@ -656,9 +666,11 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     # Modules
-    """)
+    """
+    )
     return
 
 
@@ -676,7 +688,6 @@ def _():
     from astropy import wcs
     from astropy.coordinates import SkyCoord
     from reproject import reproject_interp
-
 
     from master_class_lambdamaps import LensingMap, StellarLightMap, XrayMap
     from master_class_fits import FitsMap

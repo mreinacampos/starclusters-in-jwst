@@ -313,8 +313,11 @@ def spawn_magnitudes(
 
     return samples
 
-def find_minimum_common_area_between_maps(map1: LambdaMap, map2: LambdaMap, map3: LambdaMap) -> tuple[list, list]:
-    """ Find the coordinates defining the minimum common area between three maps
+
+def find_minimum_common_area_between_maps(
+    map1: LambdaMap, map2: LambdaMap, map3: LambdaMap
+) -> tuple[list, list]:
+    """Find the coordinates defining the minimum common area between three maps
     :param map1: instance of LabdaMap
     :param map2: instance of LabdaMap
     :param map3: instance of LabdaMap
@@ -326,16 +329,12 @@ def find_minimum_common_area_between_maps(map1: LambdaMap, map2: LambdaMap, map3
     for map in [map1, map2, map3]:
         xlim_ra.append(
             numpy.asarray(
-                map.wcs.all_pix2world(
-                    [-0.5, map.img.shape[0] + 0.5], [-0.5, -0.5], 0
-                )
+                map.wcs.all_pix2world([-0.5, map.img.shape[0] + 0.5], [-0.5, -0.5], 0)
             )[0]
         )
         ylim_dec.append(
             numpy.asarray(
-                map.wcs.all_pix2world(
-                    [-0.5, -0.5], [-0.5, map.img.shape[1] + 0.5], 0
-                )
+                map.wcs.all_pix2world([-0.5, -0.5], [-0.5, map.img.shape[1] + 0.5], 0)
             )[1]
         )
     xlim_ra = numpy.asarray(xlim_ra)
@@ -350,8 +349,9 @@ def find_minimum_common_area_between_maps(map1: LambdaMap, map2: LambdaMap, map3
     )
     return map_xlim_ra, map_ylim_dec
 
+
 def apply_minimum_common_limits_to_image(
-    lambda_map_xlim_ra: list, lambda_map_ylim_dec:list, map_to_limit: LambdaMap
+    lambda_map_xlim_ra: list, lambda_map_ylim_dec: list, map_to_limit: LambdaMap
 ) -> LambdaMap:
     """Apply the minimum common area limits to a given map
     Input:
@@ -390,13 +390,16 @@ def apply_minimum_common_limits_to_image(
 
     return map_to_limit
 
-def reduce_and_rebin_image(lambda_map: LambdaMap, map_to_modify: LambdaMap) -> tuple[numpy.ndarray, wcs.WCS, fits.Header]:
+
+def reduce_and_rebin_image(
+    lambda_map: LambdaMap, map_to_modify: LambdaMap
+) -> tuple[numpy.ndarray, wcs.WCS, fits.Header]:
     """Given a lambda map and a map of probability of recovery, reduce and rebin the latter so that they can be multiplied together.
     :param lambda_map: instance of LambdaMap to adapt into
     :param map_to_modify: image to rebin
     :return rebinned_img
     :return rebinned_wcs
-    :return rebinned_hdr 
+    :return rebinned_hdr
     """
     rebinned_hdr = map_to_modify.header.copy()
 
