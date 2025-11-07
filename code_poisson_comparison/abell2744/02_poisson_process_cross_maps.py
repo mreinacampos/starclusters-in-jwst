@@ -6,8 +6,7 @@ app = marimo.App(width="full")
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Model testing: Cross-maps comparisons
 
     In order to tests the models used, we need to calculate the expected distribution of probability in the ideal case: "For a given model, what if all GCs were observed?"
@@ -16,18 +15,15 @@ def _(mo):
     We can also change the number of data points that we spawn, to test the convergence of the results.
 
     We can also use this technique to do cross-model validation: e.g. spawn from the noisy/uniform map and compare to any of the convergence maps.
-    """
-    )
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Decide the type of analysis
-    """
-    )
+    """)
     return
 
 
@@ -36,7 +32,7 @@ def _(os):
     # decide whether to render all the figures or not
     do_figures = True
     # decide how many iteration we'll do
-    number_iterations = 1  # 200 #500
+    number_iterations = 500  # 200 #500
     # decide whether to be verbose
     do_verbose = False
 
@@ -47,9 +43,9 @@ def _(os):
 
     # determine the samples of GCs
     do_bright_gcs = True
-    do_bright_blue_gcs = False
-    do_bright_red_gcs = False
-    do_high_quality_gcs = False
+    do_bright_blue_gcs = True
+    do_bright_red_gcs = True
+    do_high_quality_gcs = True
 
     ls_gcs_populations = []
     ls_gcs_labels = []
@@ -95,8 +91,8 @@ def _(os):
         "lensing map",
     ]
 
-    ls_lambda_map = ["uniform", "X-ray"]
-    ls_lambda_type = ["uniform map", "xray map"]
+    #ls_lambda_map = ["uniform", "X-ray"]
+    #ls_lambda_type = ["uniform map", "xray map"]
 
     # ls_lambda_map = ["X-ray"]
     # ls_lambda_type = ["xray map"]
@@ -124,13 +120,11 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Define the properties of the galaxy cluster
 
     Needed to re-scale the images from pixels to coordinates
-    """
-    )
+    """)
     return
 
 
@@ -155,11 +149,9 @@ def _(GalaxyCluster, u):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Main program
-    """
-    )
+    """)
     return
 
 
@@ -169,10 +161,8 @@ def _(
     GCs,
     Table,
     abell2744,
-    apply_minimum_common_limits_to_image,
     do_figures,
     do_verbose,
-    find_minimum_common_area_between_maps,
     ls_gcs_labels,
     ls_gcs_populations,
     ls_lambda_map,
@@ -185,7 +175,6 @@ def _(
     os,
     out_path,
     plt,
-    reduce_and_rebin_image,
     time,
     u,
 ):
@@ -238,18 +227,18 @@ def _(
                 (
                     lambda_map_xlim_ra,
                     lambda_map_ylim_dec,
-                ) = find_minimum_common_area_between_maps(
+                ) = mfc.find_minimum_common_area_between_maps(
                     lambda_map1, lambda_map2, map_sky_noise
                 )
 
                 # apply those limits to all maps
-                lambda_map1 = apply_minimum_common_limits_to_image(
+                lambda_map1 = mfc.apply_minimum_common_limits_to_image(
                     lambda_map_xlim_ra, lambda_map_ylim_dec, lambda_map1
                 )
-                lambda_map2 = apply_minimum_common_limits_to_image(
+                lambda_map2 = mfc.apply_minimum_common_limits_to_image(
                     lambda_map_xlim_ra, lambda_map_ylim_dec, lambda_map2
                 )
-                map_sky_noise = apply_minimum_common_limits_to_image(
+                map_sky_noise = mfc.apply_minimum_common_limits_to_image(
                     lambda_map_xlim_ra, lambda_map_ylim_dec, map_sky_noise
                 )
 
@@ -259,7 +248,7 @@ def _(
                     rebin_sky_noise_img_map1,
                     rebin_sky_noise_wcs_map1,
                     rebin_sky_noise_hdr_map1,
-                ) = reduce_and_rebin_image(lambda_map1, map_sky_noise)
+                ) =  mfc.reduce_and_rebin_image(lambda_map1, map_sky_noise)
 
                 # calculate the map of the probability of recovery given the rebinned local sky noise map
                 map_prob_recovery = FitsMap(fname)
@@ -279,7 +268,7 @@ def _(
                     rebin_sky_noise_img_map2,
                     rebin_sky_noise_wcs_map2,
                     rebin_sky_noise_hdr_map2,
-                ) = reduce_and_rebin_image(lambda_map2, map_sky_noise)
+                ) = mfc.reduce_and_rebin_image(lambda_map2, map_sky_noise)
 
                 if do_figures:
                     _fig = plt.figure(figsize=(20, 8.5))
@@ -634,161 +623,25 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Functions
-    """
-    )
+    """)
     return
 
 
 @app.cell
-def _(numpy):
-    def find_minimum_common_area_between_maps(map1, map2, map3):
-        # find the coordinates of the edges in each map
-        xlim_ra = []
-        ylim_dec = []
-        for map in [map1, map2, map3]:
-            xlim_ra.append(
-                numpy.asarray(
-                    map.wcs.all_pix2world(
-                        [-0.5, map.img.shape[0] + 0.5], [-0.5, -0.5], 0
-                    )
-                )[0]
-            )
-            ylim_dec.append(
-                numpy.asarray(
-                    map.wcs.all_pix2world(
-                        [-0.5, -0.5], [-0.5, map.img.shape[1] + 0.5], 0
-                    )
-                )[1]
-            )
-        xlim_ra = numpy.asarray(xlim_ra)
-        ylim_dec = numpy.asarray(ylim_dec)
-        # find the minimum common area
-
-        map_xlim_ra = [numpy.min(xlim_ra[:, 0]), numpy.max(xlim_ra[:, 1])]
-        map_ylim_dec = [numpy.max(ylim_dec[:, 0]), numpy.min(ylim_dec[:, 1])]
-        print(xlim_ra)
-        print(ylim_dec)
-        print(
-            "[find_minimum_common_area_between_maps], BOTH - RA, DEC",
-            map_xlim_ra,
-            map_ylim_dec,
-        )
-        return map_xlim_ra, map_ylim_dec
-
-    return (find_minimum_common_area_between_maps,)
+def _():
+    return
 
 
 @app.cell
-def _(numpy):
-    def apply_minimum_common_limits_to_image(
-        lambda_map_xlim_ra, lambda_map_ylim_dec, map_to_limit
-    ):
-        """Apply the minimum common area limits to a given map
-        Input:
-        :param lambda_map_xlim_ra: list of two elements with the min and max RA limits
-        :param lambda_map_ylim_dec: list of two elements with the min and max DEC limits
-        :param map: instance of a LambdaMap class"""
-        _lim_pix = numpy.floor(
-            map_to_limit.wcs.all_world2pix(lambda_map_xlim_ra, lambda_map_ylim_dec, 0)
-        ).astype(int)
-        # yy, xx = numpy.meshgrid(range(lambda_map1.img.shape[1]), range(lambda_map1.img.shape[0]))
-        # restrict the range of lambda map1 to avoid spawning datapoints where there's no information in lambda map2
-        if _lim_pix[0][0] < 0:
-            _lim_pix[0][0] = 0
-        if _lim_pix[1][0] < 0:
-            _lim_pix[1][0] = 0
-        if (
-            _lim_pix[0][1] > map_to_limit.img.shape[0] + 1
-            or _lim_pix[1][1] > map_to_limit.img.shape[1] + 1
-        ):
-            print(
-                f"[apply_minimum_common_limits_to_image] WARNING: pixel limits ({_lim_pix}) for lambda map 1 exceed image dimensions ({map_to_limit.img.shape})"
-            )
-
-        # only keep the pixels within the minimum common area
-        tmp_img = map_to_limit.img[
-            _lim_pix[0][0] : _lim_pix[0][1], _lim_pix[1][0] : _lim_pix[1][1]
-        ]
-        map_to_limit.img = tmp_img.copy()
-        # update the WCS and header information accordingly
-        map_to_limit.wcs.wcs.crpix[0] -= _lim_pix[0][0]
-        map_to_limit.wcs.wcs.crpix[1] -= _lim_pix[1][0]
-        map_to_limit.header["CRPIX1"] = map_to_limit.wcs.wcs.crpix[0]
-        map_to_limit.header["CRPIX2"] = map_to_limit.wcs.wcs.crpix[1]
-        map_to_limit.header["NAXIS1"] = map_to_limit.img.shape[0]
-        map_to_limit.header["NAXIS2"] = map_to_limit.img.shape[1]
-
-        return map_to_limit
-
-    return (apply_minimum_common_limits_to_image,)
+def _():
+    return
 
 
 @app.cell
-def _(skimage, wcs):
-    def reduce_and_rebin_image(lambda_map, map_to_modify):
-        """Given a lambda map and a map of probability of recovery, reduce and rebin the latter so that they can be multiplied together."""
-
-        # convert the edges of the convergence map to celestial coordinates
-        # convention is such that (0,0) refers to the center of the pixel, not its corner
-        # coords_edges_lambda_map = lambda_map.wcs.all_pix2world([[-0.5, -0.5],
-        #                                [lambda_map.wcs.pixel_shape[0]+0.5, -0.5],
-        #                                [-0.5, lambda_map.wcs.pixel_shape[1]+0.5],
-        #                                [lambda_map.wcs.pixel_shape[0]+0.5, lambda_map.wcs.pixel_shape[1]+0.5]],
-        #                                0, ra_dec_order = True) * u.deg
-
-        ### cut out the image to the extent of the convergence map
-        # transform the edges of the convergence map from celestial coordinates to pixels
-        # pixels_edges_lambda_map = map_to_modify.wcs.all_world2pix(coords_edges_lambda_map, 0, ra_dec_order = True).astype(int)
-        # pixels_edges_lambda_map = map_to_modify.wcs.all_world2pix(map_xlim_ra, map_ylim_dec, 0, ra_dec_order = True).astype(int)
-
-        # _ax.set_xlim(_lim_pix[0])
-        # _ax.set_ylim(_lim_pix[1])
-        # reduce the mosaics to the extent of the convergence map - always using (x,y) convention
-        # if pixels_edges_lambda_map[0,0] < 0: pixels_edges_lambda_map[0,0] = 0
-        # if pixels_edges_lambda_map[0,1] < 0: pixels_edges_lambda_map[0,1] = 0
-        # reduced_img = map_to_modify.img[pixels_edges_lambda_map[0,0]:pixels_edges_lambda_map[3,0],
-        #                          pixels_edges_lambda_map[0,1]:pixels_edges_lambda_map[3,1]]
-        # reduced_img = map_to_modify.img.copy()
-        # correct the dimensions in the header
-        rebinned_hdr = map_to_modify.header.copy()
-
-        factor_resolution_to_change = (
-            map_to_modify.img.shape[0] / lambda_map.header["NAXIS1"],
-            map_to_modify.img.shape[1] / lambda_map.header["NAXIS2"],
-        )
-        rebinned_hdr["NAXIS1"] = lambda_map.header["NAXIS1"]
-        rebinned_hdr["NAXIS2"] = lambda_map.header["NAXIS2"]
-        rebinned_hdr["CRPIX1"] = (
-            map_to_modify.header["CRPIX1"]
-        ) / factor_resolution_to_change[
-            0
-        ]  #  - pixels_edges_lambda_map[0,0]
-        rebinned_hdr["CRPIX2"] = (
-            map_to_modify.header["CRPIX2"]
-        ) / factor_resolution_to_change[
-            1
-        ]  # - pixels_edges_lambda_map[0,1]
-        rebinned_hdr["CD1_1"] = (
-            map_to_modify.header["CD1_1"] * factor_resolution_to_change[0]
-        )
-        rebinned_hdr["CD2_2"] = (
-            map_to_modify.header["CD2_2"] * factor_resolution_to_change[1]
-        )
-        rebinned_wcs = wcs.WCS(rebinned_hdr)
-
-        # rebin the image into the arbitrary resolution of the lambda map
-        rebinned_img = skimage.transform.resize(
-            map_to_modify.img,
-            (rebinned_hdr["NAXIS1"], rebinned_hdr["NAXIS2"]),
-            anti_aliasing=True,
-        )
-
-        return rebinned_img, rebinned_wcs, rebinned_hdr
-
-    return (reduce_and_rebin_image,)
+def _():
+    return
 
 
 @app.cell
@@ -803,11 +656,9 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Modules
-    """
-    )
+    """)
     return
 
 
@@ -825,7 +676,7 @@ def _():
     from astropy import wcs
     from astropy.coordinates import SkyCoord
     from reproject import reproject_interp
-    import skimage
+
 
     from master_class_lambdamaps import LensingMap, StellarLightMap, XrayMap
     from master_class_fits import FitsMap
@@ -853,10 +704,8 @@ def _():
         numpy,
         os,
         plt,
-        skimage,
         time,
         u,
-        wcs,
     )
 
 

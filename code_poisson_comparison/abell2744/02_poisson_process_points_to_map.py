@@ -6,8 +6,7 @@ app = marimo.App(width="full")
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Point-to-map comparisons via an inhomogeneous Poisson point process
 
     Notebook to calculate the log-likelihood of a given GC population to have been spawned from a continuous map/image assuming an inhomogenous Poisson point process
@@ -29,18 +28,15 @@ def _(mo):
 
     Outputs:
     * Log-likelihood values for each GC population and each lambda map
-    """
-    )
+    """)
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Decide the type of analysis
-    """
-    )
+    """)
     return
 
 
@@ -76,10 +72,6 @@ def _(os):
         ls_gcs_populations.append("High-quality GCs")
         ls_gcs_labels.append("F150W<29.5\nZone 1 and 2")
 
-    # for key in ls_gcs_populations:
-    #    path = os.path.join(out_path, "imgs_" + key.replace(" ", "_"))
-    #    if not os.path.exists(path): os.makedirs(path)
-
     # determine the lambda maps (predictor maps) to compare against
     ls_lambda_map = [
         "uniform",
@@ -104,8 +96,8 @@ def _(os):
         "lensing map",
     ]
 
-    # ls_lambda_map = ["uniform"]
-    # ls_lambda_type = ["uniform map"]
+    #ls_lambda_map = ["uniform", "X-ray"]
+    #ls_lambda_type = ["uniform map", "xray map"]
     return (
         do_figures,
         do_verbose,
@@ -119,11 +111,9 @@ def _(os):
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Define properties of the galaxy cluster
-    """
-    )
+    """)
     return
 
 
@@ -148,16 +138,15 @@ def _(GalaxyCluster, u):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Main program
-    """
-    )
+    """)
     return
 
 
 @app.cell
 def _(
+    FitsMap,
     GCs,
     Table,
     abell2744,
@@ -194,10 +183,53 @@ def _(
             # mask GCs that are outside the edges of the lambda map
             bright_gcs.mask_objects_outside_lambda_map(lambda_map.wcs)
 
+            # read the local sky noise map -- MRC - to be updated
+            fname = os.path.join(
+                ".", "data", "GCs_Harris23", "2508_skynoise_grid.fits"
+            )
+            map_sky_noise = FitsMap(fname)
+            print(
+                f"[main] The local sky noise image ranges between {map_sky_noise.img.min()} and {map_sky_noise.img.max()}."
+            )
+            # find the limits of the lambda1 map in (RA, DEC)
+            (
+                lambda_map_xlim_ra,
+                lambda_map_ylim_dec,
+            ) = mfc.find_minimum_common_area_between_maps(
+                lambda_map, lambda_map, map_sky_noise
+            )
+
+            # apply those limits to all maps
+            lambda_map = mfc.apply_minimum_common_limits_to_image(
+                lambda_map_xlim_ra, lambda_map_ylim_dec, lambda_map
+            )
+            map_sky_noise = mfc.apply_minimum_common_limits_to_image(
+                lambda_map_xlim_ra, lambda_map_ylim_dec, map_sky_noise
+            )
+
+            # rebin the map of the local sky noise into the resolution of lambda map 1
+            # - used to get the level of local sky noise at a given location
+            (
+                rebin_sky_noise_img,
+                rebin_sky_noise_wcs,
+                rebin_sky_noise_hdr,
+            ) = mfc.reduce_and_rebin_image(lambda_map, map_sky_noise)
+
+            normalization = mfc.calculate_normalization_poisson_probability(
+                f150w_min=bright_gcs.f150w.min(),
+                f150w_max=bright_gcs.f150w.max(),
+                map_sky_noise=rebin_sky_noise_img,
+                gcs=bright_gcs,
+                lambda_map=lambda_map,
+            )
+            print(
+                f"[main] Normalization factor for {do_lambda_map} is {normalization:.4e}"
+            )
+        
             start = time.time()
             ### Calculate the Poisson probability of observing the GCs given the lambda map and the selection function
             ln_prob = mfc.calculate_continuous_spatial_poisson_probability(
-                lambda_map, bright_gcs, do_verbose=do_verbose
+                normalization,lambda_map, bright_gcs, do_verbose=do_verbose
             )
             dict_results[do_lambda_map] = [ln_prob]
             print(
@@ -238,21 +270,17 @@ def _(
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Functions
-    """
-    )
+    """)
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Modules
-    """
-    )
+    """)
     return
 
 
@@ -265,13 +293,13 @@ def _():
     from astropy.table import Table
     from astropy.coordinates import SkyCoord
     from master_class_galaxy_cluster import GalaxyCluster
+    from master_class_fits import FitsMap
     from master_class_gcs import GCs
     import master_validation_figures as mvf
     import master_functions_discrete as mfd
     import master_functions_continuous as mfc
     import master_functions_abell2744 as mfgc
-
-    return GCs, GalaxyCluster, Table, mfc, mo, mvf, os, time, u
+    return FitsMap, GCs, GalaxyCluster, Table, mfc, mo, mvf, os, time, u
 
 
 if __name__ == "__main__":

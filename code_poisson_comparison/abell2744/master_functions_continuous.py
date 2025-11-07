@@ -10,6 +10,9 @@ from master_class_lambdamaps import LambdaMap, LensingMap, StellarLightMap, Xray
 from master_class_galaxy_cluster import GalaxyCluster
 import matplotlib.pyplot as plt
 import astropy.units as u
+from astropy.io import fits
+from astropy import wcs
+import skimage
 
 ## LOAD THE LAMBDA MAP INSTANCE BASED ON THE TYPE OF MAP REQUESTED
 
@@ -309,3 +312,123 @@ def spawn_magnitudes(
         plt.show()
 
     return samples
+
+def find_minimum_common_area_between_maps(map1: LambdaMap, map2: LambdaMap, map3: LambdaMap) -> tuple[list, list]:
+    """ Find the coordinates defining the minimum common area between three maps
+    :param map1: instance of LabdaMap
+    :param map2: instance of LabdaMap
+    :param map3: instance of LabdaMap
+    :return lists containing the min/max RA and DEC
+    """
+    # find the coordinates of the edges in each map
+    xlim_ra = []
+    ylim_dec = []
+    for map in [map1, map2, map3]:
+        xlim_ra.append(
+            numpy.asarray(
+                map.wcs.all_pix2world(
+                    [-0.5, map.img.shape[0] + 0.5], [-0.5, -0.5], 0
+                )
+            )[0]
+        )
+        ylim_dec.append(
+            numpy.asarray(
+                map.wcs.all_pix2world(
+                    [-0.5, -0.5], [-0.5, map.img.shape[1] + 0.5], 0
+                )
+            )[1]
+        )
+    xlim_ra = numpy.asarray(xlim_ra)
+    ylim_dec = numpy.asarray(ylim_dec)
+    # find the minimum common area
+    map_xlim_ra = [numpy.min(xlim_ra[:, 0]), numpy.max(xlim_ra[:, 1])]
+    map_ylim_dec = [numpy.max(ylim_dec[:, 0]), numpy.min(ylim_dec[:, 1])]
+    print(
+        "[find_minimum_common_area_between_maps], BOTH - RA, DEC",
+        map_xlim_ra,
+        map_ylim_dec,
+    )
+    return map_xlim_ra, map_ylim_dec
+
+def apply_minimum_common_limits_to_image(
+    lambda_map_xlim_ra: list, lambda_map_ylim_dec:list, map_to_limit: LambdaMap
+) -> LambdaMap:
+    """Apply the minimum common area limits to a given map
+    Input:
+    :param lambda_map_xlim_ra: list of two elements with the min and max RA limits
+    :param lambda_map_ylim_dec: list of two elements with the min and max DEC limits
+    :param map: instance of a LambdaMap class"""
+    _lim_pix = numpy.floor(
+        map_to_limit.wcs.all_world2pix(lambda_map_xlim_ra, lambda_map_ylim_dec, 0)
+    ).astype(int)
+    # yy, xx = numpy.meshgrid(range(lambda_map1.img.shape[1]), range(lambda_map1.img.shape[0]))
+    # restrict the range of lambda map1 to avoid spawning datapoints where there's no information in lambda map2
+    if _lim_pix[0][0] < 0:
+        _lim_pix[0][0] = 0
+    if _lim_pix[1][0] < 0:
+        _lim_pix[1][0] = 0
+    if (
+        _lim_pix[0][1] > map_to_limit.img.shape[0] + 1
+        or _lim_pix[1][1] > map_to_limit.img.shape[1] + 1
+    ):
+        print(
+            f"[apply_minimum_common_limits_to_image] WARNING: pixel limits ({_lim_pix}) for lambda map 1 exceed image dimensions ({map_to_limit.img.shape})"
+        )
+
+    # only keep the pixels within the minimum common area
+    tmp_img = map_to_limit.img[
+        _lim_pix[0][0] : _lim_pix[0][1], _lim_pix[1][0] : _lim_pix[1][1]
+    ]
+    map_to_limit.img = tmp_img.copy()
+    # update the WCS and header information accordingly
+    map_to_limit.wcs.wcs.crpix[0] -= _lim_pix[0][0]
+    map_to_limit.wcs.wcs.crpix[1] -= _lim_pix[1][0]
+    map_to_limit.header["CRPIX1"] = map_to_limit.wcs.wcs.crpix[0]
+    map_to_limit.header["CRPIX2"] = map_to_limit.wcs.wcs.crpix[1]
+    map_to_limit.header["NAXIS1"] = map_to_limit.img.shape[0]
+    map_to_limit.header["NAXIS2"] = map_to_limit.img.shape[1]
+
+    return map_to_limit
+
+def reduce_and_rebin_image(lambda_map: LambdaMap, map_to_modify: LambdaMap) -> tuple[numpy.ndarray, wcs.WCS, fits.Header]:
+    """Given a lambda map and a map of probability of recovery, reduce and rebin the latter so that they can be multiplied together.
+    :param lambda_map: instance of LambdaMap to adapt into
+    :param map_to_modify: image to rebin
+    :return rebinned_img
+    :return rebinned_wcs
+    :return rebinned_hdr 
+    """
+    rebinned_hdr = map_to_modify.header.copy()
+
+    factor_resolution_to_change = (
+        map_to_modify.img.shape[0] / lambda_map.header["NAXIS1"],
+        map_to_modify.img.shape[1] / lambda_map.header["NAXIS2"],
+    )
+    rebinned_hdr["NAXIS1"] = lambda_map.header["NAXIS1"]
+    rebinned_hdr["NAXIS2"] = lambda_map.header["NAXIS2"]
+    rebinned_hdr["CRPIX1"] = (
+        map_to_modify.header["CRPIX1"]
+    ) / factor_resolution_to_change[
+        0
+    ]  #  - pixels_edges_lambda_map[0,0]
+    rebinned_hdr["CRPIX2"] = (
+        map_to_modify.header["CRPIX2"]
+    ) / factor_resolution_to_change[
+        1
+    ]  # - pixels_edges_lambda_map[0,1]
+    rebinned_hdr["CD1_1"] = (
+        map_to_modify.header["CD1_1"] * factor_resolution_to_change[0]
+    )
+    rebinned_hdr["CD2_2"] = (
+        map_to_modify.header["CD2_2"] * factor_resolution_to_change[1]
+    )
+    rebinned_wcs = wcs.WCS(rebinned_hdr)
+
+    # rebin the image into the arbitrary resolution of the lambda map
+    rebinned_img = skimage.transform.resize(
+        map_to_modify.img,
+        (rebinned_hdr["NAXIS1"], rebinned_hdr["NAXIS2"]),
+        anti_aliasing=True,
+    )
+
+    return rebinned_img, rebinned_wcs, rebinned_hdr
