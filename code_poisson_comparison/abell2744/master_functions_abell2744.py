@@ -11,7 +11,7 @@ from astropy.io import fits
 from astropy import wcs, constants
 
 
-class MapLoaders:
+class GCLoaders:
     """Mixin providing loader routines for different map types.
     Put any loading / creation routine here so users can edit them in one place.
     """
@@ -127,6 +127,26 @@ class MapLoaders:
             )
         return mask
 
+    def probability_of_recovery(self, f150w: numpy.ndarray, log10_sigma_sky: numpy.ndarray):
+        """ Analytic function describing the probability of recovery based on the magnitude and local sky noise of a given GC. Using eq (1) in Harris & Reina-Campos 2024."""
+        """ b0 is not given in the paper, so I calculated, b0 = -numpy.log((1/bright_gcs.prob - 1) * numpy.exp(b1 * bright_gcs.f150w.value + b2 * bright_gcs.log10sigsky)) 
+        Inputs:
+        :param f150w: Apparent magnitude in the F150W filter
+        :param log10_sigma_sky: Log10 of the local sky noise
+        Outputs:
+        :return: Probability of recovery S(f150w, log10_sigma_sky)
+        """
+        b0 = 85.84
+        b1 = -2.59
+        b2 = -5.37
+        g = b0 + b1 * f150w.value + b2 * log10_sigma_sky
+
+        return 1 / (1 + numpy.exp(-g))
+
+class LambdaMapLoaders:
+    """Mixin providing loader routines for different map types.
+    Put any loading / creation routine here so users can edit them in one place.
+    """
     def load_lensing_model(self, name: str):
         # moved from LensingMap.load_lensing_model
         if name == "Cha24_WL":

@@ -9,10 +9,8 @@ from astropy import wcs, constants
 from astropy import units as u
 from master_class_galaxy_cluster import GalaxyCluster
 from master_class_gcs import GCs
-from master_functions_abell2744 import MapLoaders
-
-
-class LambdaMap(MapLoaders):
+from master_functions_abell2744 import LambdaMapLoaders
+class LambdaMap(LambdaMapLoaders):
     """This top-level class is used to define the routines that LambdaMaps need to have.
 
     :param name: name of map

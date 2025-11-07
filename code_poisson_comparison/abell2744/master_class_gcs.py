@@ -10,11 +10,11 @@ from astropy import wcs
 from astropy import units as u
 from matplotlib.path import Path
 from master_class_galaxy_cluster import GalaxyCluster
-from master_functions_abell2744 import MapLoaders
+from master_functions_abell2744 import GCLoaders
 from astropy.coordinates import SkyCoord
 
 
-class DataPoints(MapLoaders):
+class DataPoints(GCLoaders):
     """This class is used to instantiate a sample of data points with RA and DEC.
 
     :param name: name of the sample
@@ -56,7 +56,7 @@ class DataPoints(MapLoaders):
         )
 
 
-class GCs(MapLoaders):
+class GCs(GCLoaders):
     """This class is used to instantiate the sample of GCs within the galaxy cluster we're studying.
 
     :param name: name of the GC sample
@@ -76,10 +76,9 @@ class GCs(MapLoaders):
         # initialise the relevant parameters
         self.name = name
         self.label = label
-        print("[GCs] Initialising the sample of GCs: {:s}".format(self.name))
 
         if "Dummy" in self.name:
-            print("[GCs] Dummy sample selected -- no catalogue will be loaded.")
+            #print("[GCs] Dummy sample selected -- no catalogue will be loaded.")
             self.gc_catalogue = None
             self.mask_catalogue = None
             self.ra = kwargs.get("ra", numpy.array([]) * u.deg)
@@ -90,6 +89,8 @@ class GCs(MapLoaders):
             )
             self.prob = kwargs.get("prob", numpy.array([]) * u.dimensionless_unscaled)
             return
+
+        print("[GCs] Initialising the sample of GCs: {:s}".format(self.name))
 
         # load the GC catalogue
         self.gc_catalogue = self.load_gc_catalogue()

@@ -229,7 +229,7 @@ def _(
                     probability_of_recovery(29.0 * u.ABmag, map_sky_noise.img)
                     * u.dimensionless_unscaled
                 )
-
+                print(f"[main] The local sky noise image ranges between {map_sky_noise.img.min()} and {map_sky_noise.img.max()}.")
                 # find the limits of the lambda1 map in (RA, DEC)
                 (
                     lambda_map_xlim_ra,
@@ -238,87 +238,10 @@ def _(
                     lambda_map1, lambda_map2, map_prob_recovery
                 )
 
-                # apply the limits to lambda_map1 and map_prob_recovery
-                _lim_pix = numpy.floor(
-                    lambda_map1.wcs.all_world2pix(
-                        lambda_map_xlim_ra, lambda_map_ylim_dec, 0
-                    )
-                ).astype(int)
-                print(
-                    f"[main] Limits in pixels for lambda map 1 ({do_lambda_map1}): {_lim_pix}"
-                )
-                # yy, xx = numpy.meshgrid(range(lambda_map1.img.shape[1]), range(lambda_map1.img.shape[0]))
-                # restrict the range of lambda map1 to avoid spawning datapoints where there's no information in lambda map2
-                if _lim_pix[0][0] < 0:
-                    _lim_pix[0][0] = 0
-                if _lim_pix[1][0] < 0:
-                    _lim_pix[1][0] = 0
-                if (
-                    _lim_pix[0][1] > lambda_map1.img.shape[0]
-                    or _lim_pix[1][1] > lambda_map1.img.shape[1]
-                ):
-                    print(
-                        "[main] WARNING: pixel limits for lambda map 1 exceed image dimensions"
-                    )
-                tmp_img = lambda_map1.img[
-                    _lim_pix[0][0] : _lim_pix[0][1], _lim_pix[1][0] : _lim_pix[1][1]
-                ]
-                print(
-                    f"[main] New shape of lambda map 1 ({do_lambda_map1}): {tmp_img.shape}"
-                )
-                lambda_map1.img = tmp_img.copy()
-                # update the WCS and header information accordingly
-                lambda_map1.wcs.wcs.crpix[0] -= _lim_pix[0][0]
-                lambda_map1.wcs.wcs.crpix[1] -= _lim_pix[1][0]
-                print(
-                    "[main] Old CRPIX1, CRPIX2 for lambda map 1:",
-                    lambda_map1.header["CRPIX1"],
-                    lambda_map1.header["CRPIX2"],
-                )
-
-                print(
-                    "[main] Updated CRPIX1, CRPIX2 for lambda map 1:",
-                    lambda_map1.wcs.wcs.crpix,
-                )
-                lambda_map1.header["CRPIX1"] = lambda_map1.wcs.wcs.crpix[0]
-                lambda_map1.header["CRPIX2"] = lambda_map1.wcs.wcs.crpix[
-                    1
-                ]  # set to zero the areas outside the common area
-                lambda_map1.header["NAXIS1"] = lambda_map1.img.shape[0]
-                lambda_map1.header["NAXIS2"] = lambda_map1.img.shape[1]
-
-                _lim_pix = numpy.floor(
-                    map_prob_recovery.wcs.all_world2pix(
-                        lambda_map_xlim_ra, lambda_map_ylim_dec, 0
-                    )
-                ).astype(int)
-                print(f"[main] Limits in pixels for map sigma sky: {_lim_pix}")
-                # restrict the range of lambda map1 to avoid spawning datapoints where there's no information in lambda map2
-                if _lim_pix[0][0] < 0:
-                    _lim_pix[0][0] = 0
-                if _lim_pix[1][0] < 0:
-                    _lim_pix[1][0] = 0
-                if (
-                    _lim_pix[0][1] > map_prob_recovery.img.shape[0]
-                    or _lim_pix[1][1] > map_prob_recovery.img.shape[1]
-                ):
-                    print(
-                        "[main] WARNING: pixel limits for map sigma sky exceed image dimensions"
-                    )
-                tmp_img = map_prob_recovery.img[
-                    _lim_pix[0][0] : _lim_pix[0][1], _lim_pix[1][0] : _lim_pix[1][1]
-                ]
-                print(f"[main] New shape of map sigma sky: {tmp_img.shape}")
-                map_prob_recovery.img = tmp_img.copy()
-                # update the WCS and header information accordingly
-                map_prob_recovery.wcs.wcs.crpix[0] -= _lim_pix[0][0]
-                map_prob_recovery.wcs.wcs.crpix[1] -= _lim_pix[1][0]
-                map_prob_recovery.header["CRPIX1"] = map_prob_recovery.wcs.wcs.crpix[0]
-                map_prob_recovery.header["CRPIX2"] = map_prob_recovery.wcs.wcs.crpix[
-                    1
-                ]  # set to zero the areas outside the common area
-                map_prob_recovery.header["NAXIS1"] = map_prob_recovery.img.shape[0]
-                map_prob_recovery.header["NAXIS2"] = map_prob_recovery.img.shape[1]
+                # apply those limits to all maps
+                lambda_map1 = apply_minimum_common_limits_to_image(lambda_map_xlim_ra, lambda_map_ylim_dec, lambda_map1)
+                lambda_map2 = apply_minimum_common_limits_to_image(lambda_map_xlim_ra, lambda_map_ylim_dec, lambda_map2)
+                map_prob_recovery = apply_minimum_common_limits_to_image(lambda_map_xlim_ra, lambda_map_ylim_dec, map_prob_recovery)
 
                 # map to spawn datapoints from: a combination of LambdaMap1 and the pseudo-probability of recovery
                 (
@@ -558,6 +481,8 @@ def _(
                 print(
                     f"[main] Spawning the magnitudes took {time.time() - start} seconds"
                 )
+                print(f"[main] The magnitudes range between {bright_gcs.f150w.min()} and {bright_gcs.f150w.max()}.")
+
 
                 # loop over the iterations
                 for sample in range(number_iterations):
@@ -703,6 +628,49 @@ def _(numpy):
 
     return (find_minimum_common_area_between_maps,)
 
+
+@app.cell
+def _(numpy):
+    def apply_minimum_common_limits_to_image(lambda_map_xlim_ra, lambda_map_ylim_dec, map_to_limit):
+        """ Apply the minimum common area limits to a given map
+        Input:
+        :param lambda_map_xlim_ra: list of two elements with the min and max RA limits
+        :param lambda_map_ylim_dec: list of two elements with the min and max DEC limits
+        :param map: instance of a LambdaMap class"""
+        _lim_pix = numpy.floor(
+            map_to_limit.wcs.all_world2pix(
+                lambda_map_xlim_ra, lambda_map_ylim_dec, 0
+            )
+        ).astype(int)
+        # yy, xx = numpy.meshgrid(range(lambda_map1.img.shape[1]), range(lambda_map1.img.shape[0]))
+        # restrict the range of lambda map1 to avoid spawning datapoints where there's no information in lambda map2
+        if _lim_pix[0][0] < 0:
+            _lim_pix[0][0] = 0
+        if _lim_pix[1][0] < 0:
+            _lim_pix[1][0] = 0
+        if (
+            _lim_pix[0][1] > map_to_limit.img.shape[0]+1
+            or _lim_pix[1][1] > map_to_limit.img.shape[1]+1
+        ):
+            print(
+                f"[apply_minimum_common_limits_to_image] WARNING: pixel limits ({_lim_pix}) for lambda map 1 exceed image dimensions ({map_to_limit.img.shape})"
+            )
+
+        # only keep the pixels within the minimum common area
+        tmp_img = map_to_limit.img[
+            _lim_pix[0][0] : _lim_pix[0][1], _lim_pix[1][0] : _lim_pix[1][1]
+        ]
+        map_to_limit.img = tmp_img.copy()
+        # update the WCS and header information accordingly
+        map_to_limit.wcs.wcs.crpix[0] -= _lim_pix[0][0]
+        map_to_limit.wcs.wcs.crpix[1] -= _lim_pix[1][0]
+        map_to_limit.header["CRPIX1"] = map_to_limit.wcs.wcs.crpix[0]
+        map_to_limit.header["CRPIX2"] = map_to_limit.wcs.wcs.crpix[1] 
+        map_to_limit.header["NAXIS1"] = map_to_limit.img.shape[0]
+        map_to_limit.header["NAXIS2"] = map_to_limit.img.shape[1]
+
+        return (map_to_limit,)
+    return (apply_minimum_common_limits_to_image,)
 
 @app.cell
 def _(numpy):

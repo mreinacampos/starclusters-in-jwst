@@ -1,14 +1,14 @@
 import marimo
 
-__generated_with = "0.17.2"
+__generated_with = "0.17.7"
 app = marimo.App(width="full")
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""# Figures: comparing the likelihood of the Poisson point process for the GC (sub-)samples and the maps"""
-    )
+    mo.md(r"""
+    # Figures: comparing the likelihood of the Poisson point process for the GC (sub-)samples and the maps
+    """)
     return
 
 
@@ -36,13 +36,17 @@ def _(os):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""## Main program""")
+    mo.md(r"""
+    ## Main program
+    """)
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(r"""## Likelihoods""")
+    mo.md(r"""
+    ## Likelihoods
+    """)
     return
 
 
@@ -265,7 +269,9 @@ def _(
 
 @app.cell
 def _(mo):
-    mo.md(r"""## Z score = (lnP - E(lnP))/sigma""")
+    mo.md(r"""
+    ## Z score = (lnP - E(lnP))/sigma
+    """)
     return
 
 
@@ -607,7 +613,9 @@ def _(
 
 @app.cell
 def _(mo):
-    mo.md(r"""## Self & cross-map comparison""")
+    mo.md(r"""
+    ## Self & cross-map comparison
+    """)
     return
 
 
@@ -774,7 +782,9 @@ def _(labels, mo, numpy, os, out_path, pandas, plt, read_tables_models, sns):
 
 @app.cell
 def _(mo):
-    mo.md(r"""## Functions""")
+    mo.md(r"""
+    ## Functions
+    """)
     return
 
 
@@ -785,7 +795,7 @@ def _(ascii, os):
         try:
             table = os.path.join(
                 ".",
-                "tables_continuous_points_to_maps",
+                "tables", "points_to_maps",
                 f"table_{gcs_name}.ecsv".replace(" ", "_"),
             )
             return_data = ascii.read(table, format="ecsv")
@@ -794,7 +804,6 @@ def _(ascii, os):
             return_data = None
 
         return return_data
-
     return (read_tables_gcs,)
 
 
@@ -806,7 +815,7 @@ def _(ascii, glob, hstack, os):
             tnames = glob.glob(
                 os.path.join(
                     ".",
-                    "tables_continuous_maps_to_maps",
+                    "tables", "maps_to_maps",
                     f"table_{gcs_name}_testing_*.ecsv".replace(" ", "_"),
                 )
             )
@@ -819,7 +828,6 @@ def _(ascii, glob, hstack, os):
             return_data = None
 
         return return_data
-
     return (read_tables_models,)
 
 
@@ -847,7 +855,9 @@ def add_violin_plot(ax, idx, data, mean, sigma=1, color="k"):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""# Modules""")
+    mo.md(r"""
+    # Modules
+    """)
     return
 
 
