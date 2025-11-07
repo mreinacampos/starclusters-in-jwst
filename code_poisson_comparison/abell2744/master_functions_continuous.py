@@ -211,20 +211,12 @@ def calculate_normalization_poisson_probability(f150w_min: u.ABmag,
     :param lambda_map: instance of the LambdaMap class containing the lambda map
     :return: float -- normalization constant
     """
-    
+    # integrate the probability of recovery over the magnitude range for the observed sky noise map
     img_probability_recovery = gcs.integrate_probability_of_recovery(f150w_min, f150w_max, map_sky_noise)
-    
-    plt.imshow(img_probability_recovery.T, origin='lower', cmap='viridis')
-    plt.colorbar(label='Probability of Recovery')
-    plt.title('Probability of Recovery Map')
-    plt.xlabel('X Pixel')
-    plt.ylabel('Y Pixel')
-    plt.show()
-    
-    
-    
-    # Integrate the probability of recovery over the entire lambda map
+       
+    # integrate the effective occurence rate (lambda map * probability of recovery) over the field of view 
     normalization_constant = numpy.sum(lambda_map.img.value * img_probability_recovery)
+    
     return normalization_constant
 
 

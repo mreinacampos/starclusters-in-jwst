@@ -91,8 +91,8 @@ def _(os):
         "lensing map",
     ]
 
-    ls_lambda_map = ["uniform"]#, "Original"]
-    ls_lambda_type = ["uniform map"]#, "stellar light"]
+    ls_lambda_map = ["uniform", "X-ray"]
+    ls_lambda_type = ["uniform map", "xray map"]
 
     #ls_lambda_map = ["X-ray"]
     #ls_lambda_type = ["xray map"]
@@ -553,7 +553,7 @@ def _(
                                                                                   gcs = bright_gcs,
                                                                                   lambda_map = lambda_map2)
                       print(f"[main] Normalization factor for {do_lambda_map2} is {normalization:.4e}")
-                  
+
                     start = time.time()
                     ### Calculate the Poisson probability of observing the GCs given the lambda map and the selection function
                     ln_prob = mfc.calculate_continuous_spatial_poisson_probability(
@@ -598,7 +598,12 @@ def _(
 
 
 @app.cell
-def _():
+def _(mo):
+    _df = mo.sql(
+        f"""
+
+        """
+    )
     return
 
 
