@@ -6,8 +6,7 @@ app = marimo.App(width="full")
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Model testing: Cross-maps comparisons
 
     In order to tests the models used, we need to calculate the expected distribution of probability in the ideal case: "For a given model, what if all GCs were observed?"
@@ -16,18 +15,15 @@ def _(mo):
     We can also change the number of data points that we spawn, to test the convergence of the results.
 
     We can also use this technique to do cross-model validation: e.g. spawn from the noisy/uniform map and compare to any of the convergence maps.
-    """
-    )
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Decide the type of analysis
-    """
-    )
+    """)
     return
 
 
@@ -124,13 +120,11 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Define the properties of the galaxy cluster
 
     Needed to re-scale the images from pixels to coordinates
-    """
-    )
+    """)
     return
 
 
@@ -155,11 +149,9 @@ def _(GalaxyCluster, u):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Main program
-    """
-    )
+    """)
     return
 
 
@@ -267,6 +259,8 @@ def _(
                     )
                     * u.dimensionless_unscaled
                 )
+                map_prob_recovery.wcs = rebin_sky_noise_wcs_map1
+                map_prob_recovery.header = rebin_sky_noise_hdr_map1
                 # map to spawn datapoints from: a combination of LambdaMap1 and the pseudo-probability of recovery
                 wgt_img = lambda_map1.img * map_prob_recovery.img
 
@@ -631,26 +625,9 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Functions
-    """
-    )
-    return
-
-
-@app.cell
-def _():
-    return
-
-
-@app.cell
-def _():
-    return
-
-
-@app.cell
-def _():
+    """)
     return
 
 
@@ -666,11 +643,39 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
-    # Modules
-    """
+    _df = mo.sql(
+        f"""
+
+        """
     )
+    return
+
+
+@app.cell
+def _(mo):
+    _df = mo.sql(
+        f"""
+
+        """
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    _df = mo.sql(
+        f"""
+
+        """
+    )
+    return
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""
+    # Modules
+    """)
     return
 
 
