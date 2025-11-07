@@ -1,13 +1,12 @@
 import marimo
 
-__generated_with = "0.17.2"
+__generated_with = "0.17.7"
 app = marimo.App(width="full")
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Model testing: Cross-maps comparisons
 
     In order to tests the models used, we need to calculate the expected distribution of probability in the ideal case: "For a given model, what if all GCs were observed?"
@@ -16,14 +15,15 @@ def _(mo):
     We can also change the number of data points that we spawn, to test the convergence of the results.
 
     We can also use this technique to do cross-model validation: e.g. spawn from the noisy/uniform map and compare to any of the convergence maps.
-    """
-    )
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""## Decide the type of analysis""")
+    mo.md(r"""
+    ## Decide the type of analysis
+    """)
     return
 
 
@@ -91,11 +91,11 @@ def _(os):
         "lensing map",
     ]
 
-    ls_lambda_map = ["uniform", "Original"]
-    ls_lambda_type = ["uniform map", "stellar light"]
+    ls_lambda_map = ["uniform"]#, "Original"]
+    ls_lambda_type = ["uniform map"]#, "stellar light"]
 
-    ls_lambda_map = ["X-ray"]
-    ls_lambda_type = ["xray map"]
+    #ls_lambda_map = ["X-ray"]
+    #ls_lambda_type = ["xray map"]
     return (
         do_figures,
         do_verbose,
@@ -120,13 +120,11 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Define the properties of the galaxy cluster
 
     Needed to re-scale the images from pixels to coordinates
-    """
-    )
+    """)
     return
 
 
@@ -151,7 +149,9 @@ def _(GalaxyCluster, u):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""## Main program""")
+    mo.md(r"""
+    ## Main program
+    """)
     return
 
 
@@ -161,6 +161,7 @@ def _(
     GCs,
     Table,
     abell2744,
+    apply_minimum_common_limits_to_image,
     do_figures,
     do_verbose,
     find_minimum_common_area_between_maps,
@@ -176,7 +177,6 @@ def _(
     os,
     out_path,
     plt,
-    probability_of_recovery,
     reduce_and_rebin_image,
     time,
     u,
@@ -223,33 +223,45 @@ def _(
                     ".", "data", "GCs_Harris23", "2508_skynoise_grid.fits"
                 )
                 map_sky_noise = FitsMap(fname)
-                map_prob_recovery = FitsMap(fname)
-                # using a dummy value for the F150W to create a pseudo-map for the probability of recovery given a map of local sky noise
-                map_prob_recovery.img = (
-                    probability_of_recovery(29.0 * u.ABmag, map_sky_noise.img)
-                    * u.dimensionless_unscaled
-                )
                 print(f"[main] The local sky noise image ranges between {map_sky_noise.img.min()} and {map_sky_noise.img.max()}.")
                 # find the limits of the lambda1 map in (RA, DEC)
                 (
                     lambda_map_xlim_ra,
                     lambda_map_ylim_dec,
                 ) = find_minimum_common_area_between_maps(
-                    lambda_map1, lambda_map2, map_prob_recovery
+                    lambda_map1, lambda_map2, map_sky_noise
                 )
 
                 # apply those limits to all maps
                 lambda_map1 = apply_minimum_common_limits_to_image(lambda_map_xlim_ra, lambda_map_ylim_dec, lambda_map1)
                 lambda_map2 = apply_minimum_common_limits_to_image(lambda_map_xlim_ra, lambda_map_ylim_dec, lambda_map2)
-                map_prob_recovery = apply_minimum_common_limits_to_image(lambda_map_xlim_ra, lambda_map_ylim_dec, map_prob_recovery)
+                map_sky_noise = apply_minimum_common_limits_to_image(lambda_map_xlim_ra, lambda_map_ylim_dec, map_sky_noise)
 
-                # map to spawn datapoints from: a combination of LambdaMap1 and the pseudo-probability of recovery
+                # rebin the map of the local sky noise into the resolution of lambda map 1
+                # - used to get the level of local sky noise at a given location
                 (
-                    rebin_prob_recovery_img,
-                    rebin_prob_recovery_wcs,
-                    rebin_prob_recovery_hdr,
-                ) = reduce_and_rebin_image(lambda_map1, map_prob_recovery)
-                wgt_img = lambda_map1.img * rebin_prob_recovery_img
+                    rebin_sky_noise_img_map1,
+                    rebin_sky_noise_wcs_map1,
+                    rebin_sky_noise_hdr_map1,
+                ) = reduce_and_rebin_image(lambda_map1, map_sky_noise)
+
+                # calculate the map of the probability of recovery given the rebinned local sky noise map
+                map_prob_recovery = FitsMap(fname)
+                # using a dummy value for the F150W to create a pseudo-map for the probability of recovery given a map of local sky noise
+                map_prob_recovery.img = (
+                    bright_gcs.probability_of_recovery(29.0 * u.ABmag, rebin_sky_noise_img_map1)
+                    * u.dimensionless_unscaled
+                )
+                # map to spawn datapoints from: a combination of LambdaMap1 and the pseudo-probability of recovery
+                wgt_img = lambda_map1.img * map_prob_recovery.img
+
+                # rebin the map of the local sky noise into the resolution of lambda map 2
+                # - used to calculate the normalization factor 
+                (
+                    rebin_sky_noise_img_map2,
+                    rebin_sky_noise_wcs_map2,
+                    rebin_sky_noise_hdr_map2,
+                ) = reduce_and_rebin_image(lambda_map2, map_sky_noise)
 
                 if do_figures:
                     _fig = plt.figure(figsize=(20, 8.5))
@@ -278,7 +290,7 @@ def _(
                     _cbar = _fig.colorbar(_cb, ax=_ax, orientation="horizontal")
                     _ax.set_title("Probability of recovery map")
                     _axs.append(_ax)
-                    _ax = plt.subplot(133, projection=rebin_prob_recovery_wcs)
+                    _ax = plt.subplot(133, projection=lambda_map1.wcs)
                     _cb = _ax.imshow(
                         wgt_img.value.T,
                         origin="lower",
@@ -288,7 +300,7 @@ def _(
                         ),
                     )
                     _cbar = _fig.colorbar(_cb, ax=_ax, orientation="horizontal")
-                    _ax.set_title("Weighted map")
+                    _ax.set_title(r"$\lambda_{\rm eff} = \lambda_1 * S$")
                     _axs.append(_ax)
 
                     _xlim_ra = numpy.asarray(
@@ -308,12 +320,12 @@ def _(
                         [
                             lambda_map1.wcs,
                             map_prob_recovery.wcs,
-                            rebin_prob_recovery_wcs,
+                            lambda_map1.wcs,
                         ],
                         [
                             lambda_map1.header,
                             map_prob_recovery.header,
-                            rebin_prob_recovery_hdr,
+                            lambda_map1.header,
                         ],
                     ):
                         # for each sample, covert the edges in (RA,DEC) to pixels and apply those limits to the panel
@@ -414,23 +426,23 @@ def _(
                     _axs.append(_ax)
                     _ax = plt.subplot(122)
                     _cb = _ax.imshow(
-                        rebin_prob_recovery_img.T,
+                        map_prob_recovery.img.T,
                         origin="lower",
                         cmap="viridis",
                         norm=mpl.colors.LogNorm(
-                            vmin=rebin_prob_recovery_img.max() / 1e5,
-                            vmax=rebin_prob_recovery_img.max(),
+                            vmin=map_prob_recovery.img.max() / 1e5,
+                            vmax=map_prob_recovery.img.max(),
                         ),
                     )
                     _cbar = _fig.colorbar(_cb, ax=_ax, orientation="horizontal")
-                    _ax.set_title("Weighted map")
+                    _ax.set_title("Probability of recovery map")
                     _axs.append(_ax)
 
                     for _i, _ax, _wcs, _hdr in zip(
                         range(10),
                         _axs,
-                        [lambda_map1.wcs, rebin_prob_recovery_wcs],
-                        [lambda_map1.header, rebin_prob_recovery_hdr],
+                        [lambda_map1.wcs, lambda_map1.wcs],
+                        [lambda_map1.header, lambda_map1.header],
                     ):
                         _ax.scatter(
                             _hdr["CRPIX1"],
@@ -452,13 +464,6 @@ def _(
                     ).replace(" ", "_")
                     _fig.savefig(_fname, bbox_inches="tight")
                     plt.close()
-
-                # rebin the map of the local sky noise - used to get the level of local sky noise at a given location
-                (
-                    rebin_sky_noise_img,
-                    rebin_sky_noise_wcs,
-                    rebin_sky_noise_hdr,
-                ) = reduce_and_rebin_image(lambda_map1, map_sky_noise)
 
                 # spawn data points from the lambda map
                 start = time.time()
@@ -505,11 +510,11 @@ def _(
                     )
                     # determine the local sky noise in the (x,y) coordinates spawned -- MRC to be checked
                     log10sigsky = (
-                        rebin_sky_noise_img[inds[:, 0], inds[:, 1]]
+                        rebin_sky_noise_img_map1[inds[:, 0], inds[:, 1]]
                         * u.dimensionless_unscaled
                     )
                     # calculate the probability of recovery for the spawned points
-                    prob_recovery = probability_of_recovery(f150w, log10sigsky)
+                    prob_recovery = bright_gcs.probability_of_recovery(f150w, log10sigsky)
 
                     # Create a DataPoints object to store the sampled positions
                     datapoints = GCs(
@@ -541,10 +546,18 @@ def _(
                             do_lambda_map2,
                         )
 
+                    if do_figures and sample == 0:
+                      normalization = mfc.calculate_normalization_poisson_probability(f150w_min = bright_gcs.f150w.min(),
+                                                                                  f150w_max = bright_gcs.f150w.max(),
+                                                                                  map_sky_noise = rebin_sky_noise_img_map2, 
+                                                                                  gcs = bright_gcs,
+                                                                                  lambda_map = lambda_map2)
+                      print(f"[main] Normalization factor for {do_lambda_map2} is {normalization:.4e}")
+                  
                     start = time.time()
                     ### Calculate the Poisson probability of observing the GCs given the lambda map and the selection function
                     ln_prob = mfc.calculate_continuous_spatial_poisson_probability(
-                        lambda_map2, datapoints, do_verbose=do_verbose
+                        normalization, lambda_map2, datapoints, do_verbose=do_verbose
                     )
                     ls_results.append(ln_prob)
                     if do_verbose:
@@ -584,9 +597,16 @@ def _(
     return
 
 
+@app.cell
+def _():
+    return
+
+
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""## Functions""")
+    mo.md(r"""
+    ## Functions
+    """)
     return
 
 
@@ -625,7 +645,6 @@ def _(numpy):
             map_ylim_dec,
         )
         return map_xlim_ra, map_ylim_dec
-
     return (find_minimum_common_area_between_maps,)
 
 
@@ -669,22 +688,8 @@ def _(numpy):
         map_to_limit.header["NAXIS1"] = map_to_limit.img.shape[0]
         map_to_limit.header["NAXIS2"] = map_to_limit.img.shape[1]
 
-        return (map_to_limit,)
+        return map_to_limit
     return (apply_minimum_common_limits_to_image,)
-
-@app.cell
-def _(numpy):
-    def probability_of_recovery(f150w, log10_sigma_sky):
-        """Based on eq (1) in Harris & Reina-Campos 2024."""
-        """ b0 is not given in the paper, so I calculated, b0 = -numpy.log((1/bright_gcs.prob - 1) * numpy.exp(b1 * bright_gcs.f150w.value + b2 * bright_gcs.log10sigsky)) """
-        b0 = 85.84
-        b1 = -2.59
-        b2 = -5.37
-        g = b0 + b1 * f150w.value + b2 * log10_sigma_sky
-
-        return 1 / (1 + numpy.exp(-g))
-
-    return (probability_of_recovery,)
 
 
 @app.cell
@@ -748,7 +753,6 @@ def _(skimage, wcs):
         )
 
         return rebinned_img, rebinned_wcs, rebinned_hdr
-
     return (reduce_and_rebin_image,)
 
 
@@ -764,7 +768,9 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    mo.md(r"""# Modules""")
+    mo.md(r"""
+    # Modules
+    """)
     return
 
 

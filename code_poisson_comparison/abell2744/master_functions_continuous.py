@@ -197,7 +197,38 @@ def spawn_datapoints_from_image(number: int, image: numpy.ndarray) -> numpy.ndar
     return inds.T
 
 
-def calculate_continuous_spatial_poisson_probability(
+def calculate_normalization_poisson_probability(f150w_min: u.ABmag, 
+                                                f150w_max: u.ABmag, 
+                                                map_sky_noise: numpy.ndarray, 
+                                                gcs : GCs,
+                                                lambda_map: LambdaMap) -> float:
+    """
+    Calculate the normalization constant for the Poisson probability distribution.
+    :param f150w_min: float -- minimum F150W magnitude
+    :param f150w_max: float -- maximum F150W magnitude
+    :param map_sky_noise: 2D numpy array -- map of the local sky
+    :param gcs: instance of the GCs class containing the sample of GCs
+    :param lambda_map: instance of the LambdaMap class containing the lambda map
+    :return: float -- normalization constant
+    """
+    
+    img_probability_recovery = gcs.integrate_probability_of_recovery(f150w_min, f150w_max, map_sky_noise)
+    
+    plt.imshow(img_probability_recovery.T, origin='lower', cmap='viridis')
+    plt.colorbar(label='Probability of Recovery')
+    plt.title('Probability of Recovery Map')
+    plt.xlabel('X Pixel')
+    plt.ylabel('Y Pixel')
+    plt.show()
+    
+    
+    
+    # Integrate the probability of recovery over the entire lambda map
+    normalization_constant = numpy.sum(lambda_map.img.value * img_probability_recovery)
+    return normalization_constant
+
+
+def calculate_continuous_spatial_poisson_probability(normalization: float,
     lambda_map: LambdaMap, gcs: GCs, do_verbose: bool = False
 ):
     """Calculates the spatial Poisson probability of observing the GCs in the bounded region B
@@ -225,7 +256,7 @@ def calculate_continuous_spatial_poisson_probability(
     if numpy.sum(mask):
         print("Missing data on {:d} points".format(numpy.sum(mask)))
     # calculate the Poisson probability as ln P = sum_i ln(ln_effective_rate) - normalisation
-    ln_prob = numpy.sum(ln_effective_rate[~mask])  # - num_lambda
+    ln_prob = - normalization + numpy.sum(ln_effective_rate[~mask])
 
     if do_verbose:
         print(

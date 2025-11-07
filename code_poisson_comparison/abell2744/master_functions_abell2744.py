@@ -9,6 +9,7 @@ from astropy.table import Table
 from master_class_galaxy_cluster import GalaxyCluster
 from astropy.io import fits
 from astropy import wcs, constants
+import scipy.integrate
 
 
 class GCLoaders:
@@ -128,13 +129,23 @@ class GCLoaders:
         return mask
 
     def probability_of_recovery(self, f150w: numpy.ndarray, log10_sigma_sky: numpy.ndarray):
-        """ Analytic function describing the probability of recovery based on the magnitude and local sky noise of a given GC. Using eq (1) in Harris & Reina-Campos 2024."""
-        """ b0 is not given in the paper, so I calculated, b0 = -numpy.log((1/bright_gcs.prob - 1) * numpy.exp(b1 * bright_gcs.f150w.value + b2 * bright_gcs.log10sigsky)) 
-        Inputs:
-        :param f150w: Apparent magnitude in the F150W filter
-        :param log10_sigma_sky: Log10 of the local sky noise
-        Outputs:
-        :return: Probability of recovery S(f150w, log10_sigma_sky)
+        """
+        Analytic function describing the probability of recovery based on the magnitude and local sky noise of a given GC.
+        Using eq (1) in Harris & Reina-Campos 2024.
+
+        Input: 
+        :param f150w : numpy.ndarray
+            1D array of apparent magnitudes in the F150W filter (astropy Quantity with units of ABmag).
+        :param log10_sigma_sky : numpy.ndarray
+            1D array of log10 of the local sky noise (dimensionless).
+
+        Output:
+        numpy.ndarray
+            Probability of recovery S(f150w, log10_sigma_sky) for each input value.
+
+        Notes:
+        b0 is not given in the paper, so I calculated:
+        b0 = -numpy.log((1/bright_gcs.prob - 1) * numpy.exp(b1 * bright_gcs.f150w.value + b2 * bright_gcs.log10sigsky))
         """
         b0 = 85.84
         b1 = -2.59
@@ -142,6 +153,35 @@ class GCLoaders:
         g = b0 + b1 * f150w.value + b2 * log10_sigma_sky
 
         return 1 / (1 + numpy.exp(-g))
+
+    def integrate_probability_of_recovery(self, f150w_min, f150w_max, log10_sigma_sky):
+        """
+        Analytical integration of the probability_of_recovery function over the specified ranges in F150W. 
+        The local sky noise at a given pixel is given by the image of the local sky noise.
+
+        Input:
+        :param f150w_min : float
+            Lower bound of f150w (ABmag).
+        :param f150w_max : float
+            Upper bound of f150w (ABmag).
+        :param log10_sigma_sky_min : float
+            Lower bound of log10_sigma_sky.
+        :param log10_sigma_sky_max : float
+            Upper bound of log10_sigma_sky.
+
+        Output:
+        float
+            integral value.
+        """
+        b0 = 85.84
+        b1 = -2.59
+        b2 = -5.37
+        # evaluate the g function at the integration limits
+        g_min = b0 + b1 * f150w_min.value + b2 * log10_sigma_sky
+        g_max = b0 + b1 * f150w_max.value + b2 * log10_sigma_sky
+
+        result = (1/b1) * numpy.log(numpy.exp(g_max)+1) - (1/b1) * numpy.log(numpy.exp(g_min)+1)
+        return result
 
 class LambdaMapLoaders:
     """Mixin providing loader routines for different map types.
