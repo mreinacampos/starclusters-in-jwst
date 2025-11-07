@@ -643,7 +643,7 @@ def _():
     import master_validation_figures as mvf
     import master_functions_discrete as mfd
     import master_functions_continuous as mfc
-    import master_functions_abell2744 as mfgc
+    import code_poisson_comparison.bullet_cluster.master_functions_bullet_cluster as mfgc
     import master_validation_figures as mvf
     import master_functions_continuous as mfc
 
