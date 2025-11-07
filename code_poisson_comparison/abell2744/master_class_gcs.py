@@ -78,7 +78,7 @@ class GCs(GCLoaders):
         self.label = label
 
         if "Dummy" in self.name:
-            #print("[GCs] Dummy sample selected -- no catalogue will be loaded.")
+            # print("[GCs] Dummy sample selected -- no catalogue will be loaded.")
             self.gc_catalogue = None
             self.mask_catalogue = None
             self.ra = kwargs.get("ra", numpy.array([]) * u.deg)

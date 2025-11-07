@@ -6,7 +6,8 @@ app = marimo.App(width="full")
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     # Model testing: Cross-maps comparisons
 
     In order to tests the models used, we need to calculate the expected distribution of probability in the ideal case: "For a given model, what if all GCs were observed?"
@@ -15,15 +16,18 @@ def _(mo):
     We can also change the number of data points that we spawn, to test the convergence of the results.
 
     We can also use this technique to do cross-model validation: e.g. spawn from the noisy/uniform map and compare to any of the convergence maps.
-    """)
+    """
+    )
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Decide the type of analysis
-    """)
+    """
+    )
     return
 
 
@@ -94,8 +98,8 @@ def _(os):
     ls_lambda_map = ["uniform", "X-ray"]
     ls_lambda_type = ["uniform map", "xray map"]
 
-    #ls_lambda_map = ["X-ray"]
-    #ls_lambda_type = ["xray map"]
+    # ls_lambda_map = ["X-ray"]
+    # ls_lambda_type = ["xray map"]
     return (
         do_figures,
         do_verbose,
@@ -120,11 +124,13 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Define the properties of the galaxy cluster
 
     Needed to re-scale the images from pixels to coordinates
-    """)
+    """
+    )
     return
 
 
@@ -149,9 +155,11 @@ def _(GalaxyCluster, u):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Main program
-    """)
+    """
+    )
     return
 
 
@@ -223,7 +231,9 @@ def _(
                     ".", "data", "GCs_Harris23", "2508_skynoise_grid.fits"
                 )
                 map_sky_noise = FitsMap(fname)
-                print(f"[main] The local sky noise image ranges between {map_sky_noise.img.min()} and {map_sky_noise.img.max()}.")
+                print(
+                    f"[main] The local sky noise image ranges between {map_sky_noise.img.min()} and {map_sky_noise.img.max()}."
+                )
                 # find the limits of the lambda1 map in (RA, DEC)
                 (
                     lambda_map_xlim_ra,
@@ -233,9 +243,15 @@ def _(
                 )
 
                 # apply those limits to all maps
-                lambda_map1 = apply_minimum_common_limits_to_image(lambda_map_xlim_ra, lambda_map_ylim_dec, lambda_map1)
-                lambda_map2 = apply_minimum_common_limits_to_image(lambda_map_xlim_ra, lambda_map_ylim_dec, lambda_map2)
-                map_sky_noise = apply_minimum_common_limits_to_image(lambda_map_xlim_ra, lambda_map_ylim_dec, map_sky_noise)
+                lambda_map1 = apply_minimum_common_limits_to_image(
+                    lambda_map_xlim_ra, lambda_map_ylim_dec, lambda_map1
+                )
+                lambda_map2 = apply_minimum_common_limits_to_image(
+                    lambda_map_xlim_ra, lambda_map_ylim_dec, lambda_map2
+                )
+                map_sky_noise = apply_minimum_common_limits_to_image(
+                    lambda_map_xlim_ra, lambda_map_ylim_dec, map_sky_noise
+                )
 
                 # rebin the map of the local sky noise into the resolution of lambda map 1
                 # - used to get the level of local sky noise at a given location
@@ -249,14 +265,16 @@ def _(
                 map_prob_recovery = FitsMap(fname)
                 # using a dummy value for the F150W to create a pseudo-map for the probability of recovery given a map of local sky noise
                 map_prob_recovery.img = (
-                    bright_gcs.probability_of_recovery(29.0 * u.ABmag, rebin_sky_noise_img_map1)
+                    bright_gcs.probability_of_recovery(
+                        29.0 * u.ABmag, rebin_sky_noise_img_map1
+                    )
                     * u.dimensionless_unscaled
                 )
                 # map to spawn datapoints from: a combination of LambdaMap1 and the pseudo-probability of recovery
                 wgt_img = lambda_map1.img * map_prob_recovery.img
 
                 # rebin the map of the local sky noise into the resolution of lambda map 2
-                # - used to calculate the normalization factor 
+                # - used to calculate the normalization factor
                 (
                     rebin_sky_noise_img_map2,
                     rebin_sky_noise_wcs_map2,
@@ -486,8 +504,9 @@ def _(
                 print(
                     f"[main] Spawning the magnitudes took {time.time() - start} seconds"
                 )
-                print(f"[main] The magnitudes range between {bright_gcs.f150w.min()} and {bright_gcs.f150w.max()}.")
-
+                print(
+                    f"[main] The magnitudes range between {bright_gcs.f150w.min()} and {bright_gcs.f150w.max()}."
+                )
 
                 # loop over the iterations
                 for sample in range(number_iterations):
@@ -514,7 +533,9 @@ def _(
                         * u.dimensionless_unscaled
                     )
                     # calculate the probability of recovery for the spawned points
-                    prob_recovery = bright_gcs.probability_of_recovery(f150w, log10sigsky)
+                    prob_recovery = bright_gcs.probability_of_recovery(
+                        f150w, log10sigsky
+                    )
 
                     # Create a DataPoints object to store the sampled positions
                     datapoints = GCs(
@@ -547,12 +568,16 @@ def _(
                         )
 
                     if do_figures and sample == 0:
-                      normalization = mfc.calculate_normalization_poisson_probability(f150w_min = bright_gcs.f150w.min(),
-                                                                                  f150w_max = bright_gcs.f150w.max(),
-                                                                                  map_sky_noise = rebin_sky_noise_img_map2, 
-                                                                                  gcs = bright_gcs,
-                                                                                  lambda_map = lambda_map2)
-                      print(f"[main] Normalization factor for {do_lambda_map2} is {normalization:.4e}")
+                        normalization = mfc.calculate_normalization_poisson_probability(
+                            f150w_min=bright_gcs.f150w.min(),
+                            f150w_max=bright_gcs.f150w.max(),
+                            map_sky_noise=rebin_sky_noise_img_map2,
+                            gcs=bright_gcs,
+                            lambda_map=lambda_map2,
+                        )
+                        print(
+                            f"[main] Normalization factor for {do_lambda_map2} is {normalization:.4e}"
+                        )
 
                     start = time.time()
                     ### Calculate the Poisson probability of observing the GCs given the lambda map and the selection function
@@ -609,9 +634,11 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Functions
-    """)
+    """
+    )
     return
 
 
@@ -650,21 +677,22 @@ def _(numpy):
             map_ylim_dec,
         )
         return map_xlim_ra, map_ylim_dec
+
     return (find_minimum_common_area_between_maps,)
 
 
 @app.cell
 def _(numpy):
-    def apply_minimum_common_limits_to_image(lambda_map_xlim_ra, lambda_map_ylim_dec, map_to_limit):
-        """ Apply the minimum common area limits to a given map
+    def apply_minimum_common_limits_to_image(
+        lambda_map_xlim_ra, lambda_map_ylim_dec, map_to_limit
+    ):
+        """Apply the minimum common area limits to a given map
         Input:
         :param lambda_map_xlim_ra: list of two elements with the min and max RA limits
         :param lambda_map_ylim_dec: list of two elements with the min and max DEC limits
         :param map: instance of a LambdaMap class"""
         _lim_pix = numpy.floor(
-            map_to_limit.wcs.all_world2pix(
-                lambda_map_xlim_ra, lambda_map_ylim_dec, 0
-            )
+            map_to_limit.wcs.all_world2pix(lambda_map_xlim_ra, lambda_map_ylim_dec, 0)
         ).astype(int)
         # yy, xx = numpy.meshgrid(range(lambda_map1.img.shape[1]), range(lambda_map1.img.shape[0]))
         # restrict the range of lambda map1 to avoid spawning datapoints where there's no information in lambda map2
@@ -673,8 +701,8 @@ def _(numpy):
         if _lim_pix[1][0] < 0:
             _lim_pix[1][0] = 0
         if (
-            _lim_pix[0][1] > map_to_limit.img.shape[0]+1
-            or _lim_pix[1][1] > map_to_limit.img.shape[1]+1
+            _lim_pix[0][1] > map_to_limit.img.shape[0] + 1
+            or _lim_pix[1][1] > map_to_limit.img.shape[1] + 1
         ):
             print(
                 f"[apply_minimum_common_limits_to_image] WARNING: pixel limits ({_lim_pix}) for lambda map 1 exceed image dimensions ({map_to_limit.img.shape})"
@@ -689,11 +717,12 @@ def _(numpy):
         map_to_limit.wcs.wcs.crpix[0] -= _lim_pix[0][0]
         map_to_limit.wcs.wcs.crpix[1] -= _lim_pix[1][0]
         map_to_limit.header["CRPIX1"] = map_to_limit.wcs.wcs.crpix[0]
-        map_to_limit.header["CRPIX2"] = map_to_limit.wcs.wcs.crpix[1] 
+        map_to_limit.header["CRPIX2"] = map_to_limit.wcs.wcs.crpix[1]
         map_to_limit.header["NAXIS1"] = map_to_limit.img.shape[0]
         map_to_limit.header["NAXIS2"] = map_to_limit.img.shape[1]
 
         return map_to_limit
+
     return (apply_minimum_common_limits_to_image,)
 
 
@@ -758,6 +787,7 @@ def _(skimage, wcs):
         )
 
         return rebinned_img, rebinned_wcs, rebinned_hdr
+
     return (reduce_and_rebin_image,)
 
 
@@ -773,9 +803,11 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     # Modules
-    """)
+    """
+    )
     return
 
 

@@ -128,12 +128,14 @@ class GCLoaders:
             )
         return mask
 
-    def probability_of_recovery(self, f150w: numpy.ndarray, log10_sigma_sky: numpy.ndarray):
+    def probability_of_recovery(
+        self, f150w: numpy.ndarray, log10_sigma_sky: numpy.ndarray
+    ):
         """
         Analytic function describing the probability of recovery based on the magnitude and local sky noise of a given GC.
         Using eq (1) in Harris & Reina-Campos 2024.
 
-        Input: 
+        Input:
         :param f150w : numpy.ndarray
             1D array of apparent magnitudes in the F150W filter (astropy Quantity with units of ABmag).
         :param log10_sigma_sky : numpy.ndarray
@@ -156,7 +158,7 @@ class GCLoaders:
 
     def integrate_probability_of_recovery(self, f150w_min, f150w_max, log10_sigma_sky):
         """
-        Analytical integration of the probability_of_recovery function over the specified ranges in F150W. 
+        Analytical integration of the probability_of_recovery function over the specified ranges in F150W.
         The local sky noise at a given pixel is given by the image of the local sky noise.
 
         Input:
@@ -180,13 +182,17 @@ class GCLoaders:
         g_min = b0 + b1 * f150w_min.value + b2 * log10_sigma_sky
         g_max = b0 + b1 * f150w_max.value + b2 * log10_sigma_sky
 
-        result = (1/b1) * numpy.log(numpy.exp(g_max)+1) - (1/b1) * numpy.log(numpy.exp(g_min)+1)
+        result = (1 / b1) * numpy.log(numpy.exp(g_max) + 1) - (1 / b1) * numpy.log(
+            numpy.exp(g_min) + 1
+        )
         return result
+
 
 class LambdaMapLoaders:
     """Mixin providing loader routines for different map types.
     Put any loading / creation routine here so users can edit them in one place.
     """
+
     def load_lensing_model(self, name: str):
         # moved from LensingMap.load_lensing_model
         if name == "Cha24_WL":
