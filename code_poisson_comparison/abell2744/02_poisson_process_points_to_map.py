@@ -6,8 +6,7 @@ app = marimo.App(width="full")
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Point-to-map comparisons via an inhomogeneous Poisson point process
 
     Notebook to calculate the log-likelihood of a given GC population to have been spawned from a continuous map/image assuming an inhomogenous Poisson point process
@@ -29,18 +28,15 @@ def _(mo):
 
     Outputs:
     * Log-likelihood values for each GC population and each lambda map
-    """
-    )
+    """)
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Decide the type of analysis
-    """
-    )
+    """)
     return
 
 
@@ -50,8 +46,11 @@ def _(os):
     do_figures = True
     # decide whether to be verbose or not
     do_verbose = True
+    # decide whether to apply the normalization
+    do_normalization = True
     # create the output path for the tables
-    out_path = os.path.join(".", "tables", "points_to_maps")
+    add_path = "_with_normalization" if do_normalization else "_without_normalization"
+    out_path = os.path.join(".", "tables", "points_to_maps" + add_path)
     if not os.path.exists(out_path):
         os.makedirs(out_path)
 
@@ -104,6 +103,7 @@ def _(os):
     # ls_lambda_type = ["uniform map", "xray map"]
     return (
         do_figures,
+        do_normalization,
         do_verbose,
         ls_gcs_labels,
         ls_gcs_populations,
@@ -115,11 +115,9 @@ def _(os):
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Define properties of the galaxy cluster
-    """
-    )
+    """)
     return
 
 
@@ -144,11 +142,9 @@ def _(GalaxyCluster, u):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Main program
-    """
-    )
+    """)
     return
 
 
@@ -159,6 +155,7 @@ def _(
     Table,
     abell2744,
     do_figures,
+    do_normalization,
     do_verbose,
     ls_gcs_labels,
     ls_gcs_populations,
@@ -221,16 +218,22 @@ def _(
                 rebin_sky_noise_hdr,
             ) = mfc.reduce_and_rebin_image(lambda_map, map_sky_noise)
 
-            normalization = mfc.calculate_normalization_poisson_probability(
-                f150w_min=bright_gcs.f150w.min(),
-                f150w_max=bright_gcs.f150w.max(),
-                map_sky_noise=rebin_sky_noise_img,
-                gcs=bright_gcs,
-                lambda_map=lambda_map,
-            )
-            print(
-                f"[main] Normalization factor for {do_lambda_map} is {normalization:.4e}"
-            )
+            if do_normalization:
+              normalization = mfc.calculate_normalization_poisson_probability(
+                  f150w_min=bright_gcs.f150w.min(),
+                  f150w_max=bright_gcs.f150w.max(),
+                  map_sky_noise=rebin_sky_noise_img,
+                  gcs=bright_gcs,
+                  lambda_map=lambda_map,
+              )
+              print(
+                  f"[main] Normalization factor for {do_lambda_map} is {normalization:.4e}"
+              )
+            else:
+              normalization = 0.0
+              print(
+                  f"[main] No normalization applied for {do_lambda_map}"
+              ) 
 
             start = time.time()
             ### Calculate the Poisson probability of observing the GCs given the lambda map and the selection function
@@ -238,6 +241,8 @@ def _(
                 normalization, lambda_map, bright_gcs, do_verbose=do_verbose
             )
             dict_results[do_lambda_map] = [ln_prob]
+            dict_results["normalization_{}".format(do_lambda_map)] = [normalization]
+        
             print(
                 "Time to calculate the spatial Poisson probability: {:.2f} s".format(
                     time.time() - start
@@ -276,21 +281,17 @@ def _(
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Functions
-    """
-    )
+    """)
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Modules
-    """
-    )
+    """)
     return
 
 
@@ -309,7 +310,6 @@ def _():
     import master_functions_discrete as mfd
     import master_functions_continuous as mfc
     import master_functions_abell2744 as mfgc
-
     return FitsMap, GCs, GalaxyCluster, Table, mfc, mo, mvf, os, time, u
 
 
