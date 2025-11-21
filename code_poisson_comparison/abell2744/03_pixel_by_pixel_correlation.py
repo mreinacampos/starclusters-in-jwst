@@ -1,18 +1,22 @@
 import marimo
 
-__generated_with = "0.17.2"
+__generated_with = "0.18.0"
 app = marimo.App(width="full")
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""# Pixel-by-pixel correlation between two maps""")
+    mo.md(r"""
+    # Pixel-by-pixel correlation between two maps
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""## Define properties of the galaxy cluster""")
+    mo.md(r"""
+    ## Define properties of the galaxy cluster
+    """)
     return
 
 
@@ -37,13 +41,17 @@ def _(GalaxyCluster, u):
 
 @app.cell
 def _(mo):
-    mo.md(r"""## Load the GC catalogue""")
+    mo.md(r"""
+    ## Load the GC catalogue
+    """)
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(r"""## Decide the type of analysis""")
+    mo.md(r"""
+    ## Decide the type of analysis
+    """)
     return
 
 
@@ -107,14 +115,15 @@ def _():
 
 @app.cell
 def _(mo):
-    mo.md(r"""## Main program""")
+    mo.md(r"""
+    ## Main program
+    """)
     return
 
 
 @app.cell
 def _(
     GCs,
-    SkyCoord,
     Table,
     abell2744,
     do_figures,
@@ -123,7 +132,7 @@ def _(
     ls_gcs_populations,
     ls_lambda_map,
     ls_lambda_type,
-    mf,
+    mfc,
     numpy,
     os,
     plt,
@@ -147,20 +156,6 @@ def _(
     dict_results = {"Lambda Map": []}
 
     for _gcs_name, gcs_label in zip(ls_gcs_populations, ls_gcs_labels):
-        # 2: create the GC catalogue from Harris & Reina-Campos 2024
-        # load the GC catalogue from Harris & Reina-Campos 2024
-        gc_catalogue = mf.load_gc_catalogue()
-
-        # prepare the right mask based on the sample of GCs
-        mask = mf.create_mask_for_gc_sample(_gcs_name, gc_catalogue)
-
-        # determine the coordinates of the GCs
-        coords_gcs = SkyCoord(
-            ra=gc_catalogue[mask]["RA [J2000]"],
-            dec=gc_catalogue[mask]["DEC [J2000]"],
-            frame="fk5",
-            distance=abell2744.distance,
-        )
 
         _fig, axs = plt.subplots(2, 4, figsize=(20, 10), sharex=True)
         axs = axs.ravel()
@@ -177,15 +172,11 @@ def _(
             bright_gcs = GCs(
                 _gcs_name,
                 gcs_label,
-                coords_gcs.ra.to("deg"),
-                coords_gcs.dec.to("deg"),
-                gc_catalogue[mask]["F150W"].to(u.ABmag),
-                numpy.log10(gc_catalogue[mask]["sigsky"].value),
-                gc_catalogue[mask]["prob"],
+                abell2744,
             )
 
             # create the instance of the lensing map class
-            lambda_map = mf.create_instance_lambda_map(
+            lambda_map = mfc.create_instance_lambda_map(
                 _type_map, do_lambda_map, bright_gcs, abell2744
             )
             lambda_map.img = (
@@ -195,6 +186,20 @@ def _(
             # convert the convergence maps to projected mass surface densities
             if _type_map == "lensing map":
                 lambda_map.convert_to_projected_mass(abell2744)
+
+            # smooth lambda map by the same kernel as the GC number density
+            sigma_px = float(
+              sigma_arcsec
+              / (
+                  numpy.mean(
+                      numpy.abs(lambda_map.wcs.pixel_scale_matrix.diagonal())
+                      * u.deg.to("arcsec")
+                  )
+                  * u.arcsec
+                )
+            )
+            # smoothed lambda map
+            lambda_map.img = scipy.ndimage.gaussian_filter(lambda_map.img.value, sigma_px) + 1e-10
 
             # mask GCs that are outside the edges of the lambda map
             bright_gcs.mask_objects_outside_lambda_map(
@@ -213,7 +218,7 @@ def _(
             (
                 bright_gcs.nrho_img,
                 bright_gcs.nrho_smooth_img,
-            ) = mf.create_both_number_density_and_smoothed_maps_gcs(
+            ) = mfc.create_both_number_density_and_smoothed_maps_gcs(
                 bright_gcs, lambda_map.img.T.shape, sigma_arcsec
             )
 
@@ -334,7 +339,9 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    mo.md(r"""### Ratio of the LambdaMap to the GC map""")
+    mo.md(r"""
+    ### Ratio of the LambdaMap to the GC map
+    """)
     return
 
 
@@ -342,13 +349,12 @@ def _(mo):
 def _(
     GCs,
     LogNorm,
-    SkyCoord,
     abell2744,
     ls_gcs_labels,
     ls_gcs_populations,
     ls_lambda_map,
     ls_lambda_type,
-    mf,
+    mfc,
     numpy,
     os,
     plt,
@@ -370,30 +376,6 @@ def _(
             os.makedirs(out_path)
 
         for _gcs_name, gcs_label in zip(ls_gcs_populations, ls_gcs_labels):
-            # 2: create the GC catalogue from Harris & Reina-Campos 2024
-            # load the GC catalogue from Harris & Reina-Campos 2024
-            gc_catalogue = mf.load_gc_catalogue()
-
-            # prepare the right mask based on the sample of GCs
-            if _gcs_name == "Bright GCs":
-                mask = gc_catalogue["F150W"].to(u.ABmag) < 29.5 * u.ABmag
-            elif _gcs_name == "Bright Blue GCs":
-                mask = (gc_catalogue["F150W"].to(u.ABmag) < 29.5 * u.ABmag) * (
-                    gc_catalogue["F115W0"] - gc_catalogue["F200W0"] < 0
-                )
-            elif _gcs_name == "Bright Red GCs":
-                mask = (gc_catalogue["F150W"].to(u.ABmag) < 29.5 * u.ABmag) * (
-                    gc_catalogue["F115W0"] - gc_catalogue["F200W0"] >= 0
-                )
-
-            # determine the coordinates of the GCs
-            coords_gcs = SkyCoord(
-                ra=gc_catalogue[mask]["RA [J2000]"],
-                dec=gc_catalogue[mask]["DEC [J2000]"],
-                frame="fk5",
-                distance=abell2744.distance,
-            )
-
             _fig = plt.figure(figsize=(20, 10))
             _axs = []
 
@@ -405,15 +387,11 @@ def _(
                 bright_gcs = GCs(
                     _gcs_name,
                     gcs_label,
-                    coords_gcs.ra.to("deg"),
-                    coords_gcs.dec.to("deg"),
-                    gc_catalogue[mask]["F150W"].to(u.ABmag),
-                    numpy.log10(gc_catalogue[mask]["sigsky"].value),
-                    gc_catalogue[mask]["prob"],
+                    abell2744
                 )
 
                 # create the instance of the lensing map class
-                lambda_map = mf.create_instance_lambda_map(
+                lambda_map = mfc.create_instance_lambda_map(
                     _type_map, do_lambda_map, bright_gcs, abell2744
                 )
                 lambda_map.img = (
@@ -438,7 +416,7 @@ def _(
                 (
                     bright_gcs.nrho_img,
                     bright_gcs.nrho_smooth_img,
-                ) = mf.create_both_number_density_and_smoothed_maps_gcs(
+                ) = mfc.create_both_number_density_and_smoothed_maps_gcs(
                     bright_gcs, lambda_map.img.T.shape, sigma_arcsec
                 )
 
@@ -451,8 +429,9 @@ def _(
                 _fname = os.path.join(
                     _path, f"maps_SBi_{do_lambda_map}_{_gcs_name}".replace(" ", "_")
                 )
-                mf.read_information_about_interpolation(_fname, bright_gcs)
-                print("[main] READING the footprint of the GCs from", _fname)
+                # create the footprint of the GCs
+                bright_gcs.create_footprint_gcs(lambda_map.wcs)
+                print("[main] CREATING the footprint of the GCs from themselves")
 
                 bright_gcs.nrho_img *= bright_gcs.intp_mask.T
                 bright_gcs.nrho_smooth_img *= bright_gcs.intp_mask.T
@@ -561,7 +540,9 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""## Functions""")
+    mo.md(r"""
+    ## Functions
+    """)
     return
 
 
@@ -721,7 +702,6 @@ def _(LogNorm, numpy, os, plt):
         )
         fig.savefig(os.path.join(out_path, fname), bbox_inches="tight")
         plt.close()
-
     return (figure_side_by_side_number_density_gcs_lambda_map,)
 
 
@@ -732,7 +712,9 @@ def renormalize_img(img, min=0, max=1):
 
 @app.cell
 def _(mo):
-    mo.md(r"""## Modules""")
+    mo.md(r"""
+    ## Modules
+    """)
     return
 
 
@@ -756,14 +738,14 @@ def _():
 
     # sys.path.append("/Users/mreina/Documents/Science/000-Projects/git-repos/git_shapes_gcs_dm/")
     # from functions_shapes import create_gcs_image
-    import master_functions as mf
-    from master_classes_for_mapping import (
-        GalaxyCluster,
-        GCs,
-        LensingMap,
-        StellarLightMap,
-        XrayMap,
-    )
+    from master_class_galaxy_cluster import GalaxyCluster
+    from master_class_fits import FitsMap
+    from master_class_gcs import GCs
+    import master_validation_figures as mvf
+    import master_functions_discrete as mfd
+    import master_functions_continuous as mfc
+    import master_functions_abell2744 as mfgc
+    import master_functions_continuous as mfc
 
     mpl.rcParams["text.usetex"] = False
     mpl.rcParams["font.size"] = 18.0
@@ -773,9 +755,8 @@ def _():
         GCs,
         GalaxyCluster,
         LogNorm,
-        SkyCoord,
         Table,
-        mf,
+        mfc,
         mo,
         numpy,
         os,

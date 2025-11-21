@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.17.7"
+__generated_with = "0.18.0"
 app = marimo.App(width="full")
 
 
@@ -29,7 +29,7 @@ def _(os):
         "BCGless",
         "X-ray",
         "uniform",
-        "noisy",
+        #"noisy",
     ]
     return labels, out_path
 
@@ -263,6 +263,7 @@ def _(mo):
 
 @app.cell
 def _(
+    AutoMinorLocator,
     labels,
     mo,
     mpl,
@@ -283,7 +284,7 @@ def _(
 
         for j, gcs_name in enumerate(gc_samples):
             axs[j].annotate(
-                gcs_name, xy=(0.98, 0.02), xycoords="axes fraction", ha="right"
+                gcs_name, xy=(0.98, 0.95), xycoords="axes fraction", ha="right", va = "top"
             )
 
             # read the input tables
@@ -334,9 +335,13 @@ def _(
             ax.set_yticks(numpy.arange(len(labels)))
             ax.set_ylim(-0.5, len(labels) - 0.5)
             ax.invert_yaxis()
+            ax.tick_params(direction="in", which="both", bottom=True, top=True, left=True, right=True)
+            # set minor ticks in xaxis
+            ax.xaxis.set_minor_locator(AutoMinorLocator())
+            ax.set_xlim(-5, 50)
             ax.axhline(3.5, ls=":", c="k", lw=0.5)
-            ax.axhline(5.5, ls=":", c="k", lw=0.5)
-            ax.axhline(6.5, ls=":", c="k", lw=0.5)
+            #ax.axhline(5.5, ls=":", c="k", lw=0.5)
+            #ax.axhline(6.5, ls=":", c="k", lw=0.5)
             if i == 0:
                 ax.set_yticklabels(labels)
             ax.set_xlabel(
@@ -358,7 +363,14 @@ def _(
         # fig.show()
         return fig
 
-    _fig = fig_Zscore_per_gc_sample(out_path, labels)
+    _labels = [
+        "Bergamini23",
+        "Price24",
+        "Cha24_WL",
+        "Cha24_SL_WL",
+        "Original",
+    ]
+    _fig = fig_Zscore_per_gc_sample(out_path, _labels)
     mo.md(f""" Here's the plot! {mo.as_html(_fig)} """)
     return
 
@@ -468,6 +480,7 @@ def _(
 
 @app.cell
 def _(
+    AutoMinorLocator,
     labels,
     mo,
     numpy,
@@ -478,7 +491,7 @@ def _(
     read_tables_models,
 ):
     def fig_Zscore_per_selected_model(out_path=out_path, labels=labels):
-        fig, axs = plt.subplots(1, 3, figsize=(16, 5.5), sharex=False, sharey=True)
+        fig, axs = plt.subplots(1, 3, figsize=(18, 4.5), sharex=False, sharey=True)
         axs = axs.ravel()
         gc_samples = ["Bright GCs", "Bright Blue GCs", "Bright Red GCs", "High-quality GCs"]
         gc_colors = ["k", "C0", "C3", "C6"]
@@ -506,20 +519,20 @@ def _(
                     c = f"C{j}"
 
                 # show the violin plots of the self map comparison
-                try:
-                    mean = numpy.mean(data_maps[f"{key}-{key}"])
-                    sigma = numpy.std(data_maps[f"{key}-{key}"])
-                    add_violin_plot(
-                        axs[idx],
-                        i,
-                        data_maps[f"{key}-{key}"],
-                        mean,
-                        sigma=sigma,
-                        color=c,
-                    )
-                except:
-                    print(f"{key}-{key} NOT ready yet")
-                    continue
+                #try:
+                mean = numpy.mean(data_maps[f"{key}-{key}"])
+                sigma = numpy.std(data_maps[f"{key}-{key}"])
+                add_violin_plot(
+                    axs[idx],
+                    i,
+                    numpy.abs((data_maps[f"{key}-{key}"]-mean)/sigma),
+                    mean = 0,
+                    #sigma=sigma,
+                    color=c,
+                )
+                #except:
+                #    print(f"{key}-{key} NOT ready yet")
+                #    continue
 
                 # show the observational cases
                 try:
@@ -528,34 +541,40 @@ def _(
                     else:
                         ll = ""
                     axs[idx].scatter(
-                        (data_points_obs[key] - mean) / sigma,
+                        numpy.abs((data_points_obs[key] - mean) / sigma),
                         i,
                         marker=ls_markers[j],
                         color=c,
                         s=200,
                         label=ll,
-                        zorder=1 / (j + 1),
+                        zorder= 100,
+                        edgecolor="k",
                     )
                 except:
                     print(f"WARNING: Observational - {key} not ready yet")
 
         for i, ax in enumerate(axs):
             ax.set_yticks(numpy.arange(len(gc_samples)))
+            ax.set_xlim(0, 50)
+            ax.set_ylim(-0.8, len(gc_samples) - 0.8)
+            ax.tick_params(direction="in", which="both", bottom=True, top=True, left=True, right=True)
+            # set minor ticks in xaxis
+            ax.xaxis.set_minor_locator(AutoMinorLocator())
             if i == 0:
                 ax.set_yticklabels(gc_samples)
             ax.invert_yaxis()
             ax.set_xlabel(
-                "$\\mathcal{Z} = (\\ln \\mathcal{P} - E[\\ln \\mathcal{P}])/\\sigma$"
+                "$|\\mathcal{Z}| = |(\\ln \\mathcal{P} - E[\\ln \\mathcal{P}])/\\sigma|$"
             )
-            ax.legend(loc="upper center", ncols=2, bbox_to_anchor=(0.5, 1.2))
+            ax.legend(loc="upper center", ncols=2, bbox_to_anchor=(0.5, 1.25))
 
         axs[0].annotate(
-            "Mass tracers", xy=(0.98, 0.02), xycoords="axes fraction", ha="right"
+            "Mass tracers", xy=(0.98, 0.95), xycoords="axes fraction", ha="right", va = "top"
         )
         axs[1].annotate(
-            "Stellar light", xy=(0.98, 0.02), xycoords="axes fraction", ha="right"
+            "Stellar light", xy=(0.98, 0.95), xycoords="axes fraction", ha="right", va = "top"
         )
-        axs[2].annotate("X-ray", xy=(0.98, 0.02), xycoords="axes fraction", ha="right")
+        axs[2].annotate("X-ray", xy=(0.98, 0.95), xycoords="axes fraction", ha="right", va = "top")
 
         left = 0.1
         right = 0.98
@@ -594,10 +613,19 @@ def _(mo):
 
 
 @app.cell
-def _(mo, numpy, os, out_path, plt, read_tables_gcs, read_tables_models):
+def _(
+    AutoMinorLocator,
+    mo,
+    numpy,
+    os,
+    out_path,
+    plt,
+    read_tables_gcs,
+    read_tables_models,
+):
     def fig_Zscore_model_comparison_self_cross(out_path, models):
-        fig, axs = plt.subplots(3, 2, figsize=(16, 14), sharex=True, sharey=False)
-  
+        fig, axs = plt.subplots(4, 1, figsize=(7, 18), sharex=False, sharey=False)
+
         axs = axs.ravel()
 
         # read the input tables
@@ -613,31 +641,32 @@ def _(mo, numpy, os, out_path, plt, read_tables_gcs, read_tables_models):
             idx = 0
             axs[j].annotate(
                 f"$\\lambda_2$ = {key}",
-                xy=(0.02, 0.98),
+                xy=(0.95, 0.95),
                 xycoords="axes fraction",
-                ha="left",
+                ha="right",
                 va="top",
-                fontsize=24,
+                fontsize=20,
             )
 
             # Self-map comparison
-            try:
-                mean = numpy.mean(data_maps[f"{key}-{key}"])
-                sigma = numpy.std(data_maps[f"{key}-{key}"])
-                add_violin_plot(
-                    axs[j], idx, data_maps[f"{key}-{key}"], mean, sigma=sigma, color="k"
-                )
-            except:
-                print(f"{key}-{key} NOT ready yet")
-                # mean = 0; sigma = 1
-                # continue
+            for _k in range(4):
+              try:
+                  mean = numpy.mean(data_maps[f"{key}-{key}"])
+                  sigma = numpy.std(data_maps[f"{key}-{key}"])
+                  add_violin_plot(
+                      axs[j], _k, numpy.abs((data_maps[f"{key}-{key}"]-mean)/sigma), mean = 0, color="k"
+                  )
+              except:
+                  print(f"{key}-{key} NOT ready yet")
+                  # mean = 0; sigma = 1
+                  # continue
 
-            idx += 1
-            labels.append("Itself")
+            #idx += 1
+            #labels.append("Itself")
 
             try:
                 axs[j].scatter(
-                    (data_points_obs[key] - mean) / sigma,
+                    numpy.abs((data_points_obs[key] - mean) / sigma),
                     idx,
                     marker="*",
                     color="black",
@@ -646,7 +675,7 @@ def _(mo, numpy, os, out_path, plt, read_tables_gcs, read_tables_models):
                 )
             except:
                 print(f"{key} - OBS NOT ready yet")
-            labels.append("Observed")
+            labels.append("Bright GCs")
             idx += 1
 
             # Cross-map comparison
@@ -658,9 +687,8 @@ def _(mo, numpy, os, out_path, plt, read_tables_gcs, read_tables_models):
                     add_violin_plot(
                         axs[j],
                         idx,
-                        data_maps[f"{key2}-{key}"],
-                        mean,
-                        sigma=sigma,
+                        numpy.abs((data_maps[f"{key2}-{key}"]-mean)/sigma),
+                        mean = 0,
                         color=f"C{i}",
                     )
                 except:
@@ -671,21 +699,24 @@ def _(mo, numpy, os, out_path, plt, read_tables_gcs, read_tables_models):
             axs[j].set_yticks(numpy.arange(len(labels)))
             axs[j].set_yticklabels(labels)
             axs[j].invert_yaxis()
-            axs[j].axhline(1.5, c="k", lw=1.5, ls="--")
-            axs[j].axvline(0, c="k", lw=0.5, ls=":")
-
-            if j >= 4:
-                axs[j].set_xlabel(
-                    "$\\mathcal{Z} = (\\ln \\mathcal{P} - E[\\ln \\mathcal{P}])/\\sigma$"
+            axs[j].axhline(0.2, c="k", lw=0.5, ls="--")
+            #axs[j].axvline(0, c="k", lw=0.5, ls=":")
+            axs[j].tick_params(direction="in", which="both", bottom=True, top=True, left=True, right=True)
+            # set minor ticks in xaxis
+            axs[j].xaxis.set_minor_locator(AutoMinorLocator())
+            axs[j].set_xlim(0, 90)
+        axs[-1].set_xlabel(
+                    "$|\\mathcal{Z}| = |(\\ln \\mathcal{P} - E[\\ln \\mathcal{P}])/\\sigma|$"
                 )
 
-        # axs[5].set_axis_off()
+        #axs[5].set_axis_off()
+
         left = 0.1
         right = 0.98
         top = 0.95
         bottom = 0.1
-        hspace = 0.15
-        wspace = 0.35
+        hspace = 0.1
+        wspace = 0.05
         fig.subplots_adjust(
             left=left, top=top, bottom=bottom, right=right, hspace=hspace, wspace=wspace
         )
@@ -697,134 +728,12 @@ def _(mo, numpy, os, out_path, plt, read_tables_gcs, read_tables_models):
         "Price24",
         "Cha24_WL",
         "Original",
-        #"BCGless",
         "X-ray",
-        "uniform",
-    ]  # , "noisy"]
-    # _labels = ['Bergamini23', 'Price24', 'Cha24_SL_WL', 'Cha24_WL', 'Original',  'BCGless', 'X-ray', 'uniform', 'noisy']
+        #"uniform",
+    ]  
 
     _fig = fig_Zscore_model_comparison_self_cross(out_path, _labels)
     mo.md(f""" Here's the plot! {mo.as_html(_fig)} """)
-    return
-
-
-@app.cell
-def _(mo, numpy, os, out_path, plt, read_tables_gcs, read_tables_models):
-    def fig_lnP_model_comparison_self_cross(out_path, models):
-        fig, axs = plt.subplots(3, 2, figsize=(16, 14), sharex=False, sharey=False)
-  
-        axs = axs.ravel()
-
-        # read the input tables
-        data_maps = read_tables_models("Bright GCs")
-        data_points_obs = read_tables_gcs("Bright GCs")
-
-        gc_samples = ["Bright GCs"]
-        gc_colors = ["k"]
-
-        # set a model for lambda2
-        for j, key in enumerate(models):
-            labels = []
-            idx = 0
-            axs[j].annotate(
-                f"$\\lambda_2$ = {key}",
-                xy=(0.02, 0.98),
-                xycoords="axes fraction",
-                ha="left",
-                va="top",
-                fontsize=24,
-            )
-
-            # Self-map comparison
-            try:
-                print(f"Processing self-map comparison for {key} - mean {numpy.mean(data_maps[f'{key}-{key}'])} and sigma {numpy.std(data_maps[f'{key}-{key}'])}")
-                mean = 0#numpy.mean(data_maps[f"{key}-{key}"])
-                sigma = 1#numpy.std(data_maps[f"{key}-{key}"])
-                add_violin_plot(
-                    axs[j], idx, data_maps[f"{key}-{key}"], mean, sigma=sigma, color="k"
-                )
-            except:
-                print(f"{key}-{key} NOT ready yet")
-                # mean = 0; sigma = 1
-                # continue
-
-            idx += 1
-            labels.append("Itself")
-
-            try:
-                axs[j].scatter(
-                    (data_points_obs[key] - mean) / sigma,
-                    idx,
-                    marker="*",
-                    color="black",
-                    s=200,
-                    lw=2,
-                )
-            except:
-                print(f"{key} - OBS NOT ready yet")
-            labels.append("Observed")
-            idx += 1
-
-            # Cross-map comparison
-            for i, key2 in enumerate(models):
-                if key2 == key:
-                    continue
-                labels.append(key2)
-                try:
-                    add_violin_plot(
-                        axs[j],
-                        idx,
-                        data_maps[f"{key2}-{key}"],
-                        mean,
-                        sigma=sigma,
-                        color=f"C{i}",
-                    )
-                except:
-                    print(f"{key2}-{key} NOT ready yet")
-                idx += 1
-
-            # format the axes
-            axs[j].set_yticks(numpy.arange(len(labels)))
-            axs[j].set_yticklabels(labels)
-            axs[j].invert_yaxis()
-            axs[j].axhline(1.5, c="k", lw=1.5, ls="--")
-
-            if j >= 4:
-                axs[j].set_xlabel(
-                    "$\\ln \\mathcal{P}$"
-                )
-
-        # axs[5].set_axis_off()
-        left = 0.1
-        right = 0.98
-        top = 0.95
-        bottom = 0.1
-        hspace = 0.15
-        wspace = 0.35
-        fig.subplots_adjust(
-            left=left, top=top, bottom=bottom, right=right, hspace=hspace, wspace=wspace
-        )
-        fname = os.path.join(out_path, "poisson_process_lnP_self_cross_models.pdf")
-        fig.savefig(fname, dpi=300, bbox_inches="tight")
-        return fig
-
-    _labels = [
-        "Price24",
-        "Cha24_WL",
-        "Original",
-        "BCGless",
-        "X-ray",
-        "uniform",
-    ]  # , "noisy"]
-    # _labels = ['Bergamini23', 'Price24', 'Cha24_SL_WL', 'Cha24_WL', 'Original',  'BCGless', 'X-ray', 'uniform', 'noisy']
-
-    _fig = fig_lnP_model_comparison_self_cross(out_path, _labels)
-    mo.md(f""" Here's the plot! {mo.as_html(_fig)} """)
-    return
-
-
-@app.cell
-def _():
     return
 
 
@@ -846,7 +755,7 @@ def _(labels, mo, numpy, os, out_path, pandas, plt, read_tables_models, sns):
             for i, key1 in enumerate(models):
                 mean1 = numpy.mean(data_maps[f"{key1}-{key}"])
                 dict_results[key].append(
-                    (mean1 - mean2) / sigma2
+                    numpy.abs((mean1 - mean2) / sigma2)
                 )  # save how many sigmas away the mean of the cross-map is from the self-map
 
         results = pandas.DataFrame(dict_results, index=models)
@@ -856,10 +765,10 @@ def _(labels, mo, numpy, os, out_path, pandas, plt, read_tables_models, sns):
             results,
             annot=True,
             square=True,
-            vmin=-20, vmax=20,
-            cmap = "coolwarm",
+            vmin=0, vmax=20,
+            cmap = "viridis",
             cbar_kws={
-                "label": r"$\mathcal{Z} = (E[\ln \mathcal{P}\{\lambda_1\}] - E[\ln \mathcal{P}\{\lambda_2\}])/\sigma_{{P}\{\lambda_2\}}$"
+                "label": r"$|\mathcal{Z}|= |(E[\ln \mathcal{P}\{\lambda_1\}] - E[\ln \mathcal{P}\{\lambda_2\}])/\sigma_{{P}\{\lambda_2\}}|$"
             },
         )
         ax.set(xlabel="$\\lambda_2$", ylabel="$\\lambda_1$")
@@ -873,6 +782,62 @@ def _(labels, mo, numpy, os, out_path, pandas, plt, read_tables_models, sns):
         return fig
 
     _fig = fig_Zscore_model_comparison_self_cross_all(out_path, labels[:-1])
+    mo.md(f""" Here's the plot! {mo.as_html(_fig)} """)
+    return
+
+
+@app.cell
+def _(mo, numpy, os, out_path, pandas, plt, read_tables_models, sns):
+    def _fig_Zscore_model_comparison_self_cross_all(out_path, models):
+        dict_results = {}  # "Models" : []}# = numpy.zeros((len(models), len(models)))
+        # lambda 2
+        for j, key in enumerate(models):
+            data_maps = read_tables_models("Bright GCs")
+
+            # define the baseline for the comparison
+            mean2 = numpy.mean(data_maps[f"{key}-{key}"])
+            sigma2 = numpy.std(data_maps[f"{key}-{key}"])
+
+            dict_results[key] = []
+            # dict_results["Models"].append(key) # save the model name in the first column
+
+            for i, key1 in enumerate(models):
+                mean1 = numpy.mean(data_maps[f"{key1}-{key}"])
+                dict_results[key].append(
+                    numpy.abs((mean1 - mean2) / sigma2)
+                )  # save how many sigmas away the mean of the cross-map is from the self-map
+
+        results = pandas.DataFrame(dict_results, index=models)
+        print(results)
+        fig = plt.figure(figsize=(20, 14))
+        ax = sns.heatmap(
+            results,
+            annot=True,
+            square=True,
+            vmin=0, vmax=20,
+            cmap = "viridis",
+            cbar_kws={
+                "label": r"$|\mathcal{Z}|= |(E[\ln \mathcal{P}\{\lambda_1\}] - E[\ln \mathcal{P}\{\lambda_2\}])/\sigma_{{P}\{\lambda_2\}}|$"
+            },
+        )
+        ax.set(xlabel="$\\lambda_2$", ylabel="$\\lambda_1$")
+        ax.xaxis.tick_top()
+
+        # axs[5].set_axis_off()
+        # left = 0.1; right = 0.98; top = 0.95; bottom = 0.1; hspace = 0.05; wspace = 0.35
+        # fig.subplots_adjust(left=left, top=top, bottom=bottom, right=right, hspace=hspace, wspace=wspace)
+        fname = os.path.join(out_path, "heatmap_Zscore_all_models.pdf")
+        fig.savefig(fname, dpi=300, bbox_inches="tight")
+        return fig
+
+    _labels = [
+        "Price24",
+        "Cha24_WL",
+        "Original",
+        "X-ray",
+        "uniform",
+    ]
+    _fig = _fig_Zscore_model_comparison_self_cross_all(out_path, _labels)
     mo.md(f""" Here's the plot! {mo.as_html(_fig)} """)
     return
 
@@ -936,20 +901,17 @@ def add_violin_plot(ax, idx, data, mean, sigma=1, color="k"):
         (data - mean) / sigma,
         [idx],
         points=200,
-        vert=False,
-        widths=1.1,
-        showmedians=True,
-        showextrema=True,
+        orientation="horizontal",
+        widths=1.2,
+        showmedians=False,
+        showextrema=False,
         bw_method=0.5,
+        side = "low"
     )
     # make the violin bodies the same colour
     for pc in parts["bodies"]:
         pc.set_facecolor(color)
         pc.set_edgecolor("black")
-    # Make all the violin statistics marks red:
-    for partname in ("cbars", "cmins", "cmaxes", "cmedians"):
-        parts[partname].set_edgecolor(color)
-        parts[partname].set_linewidth(1)
 
 
 @app.cell(hide_code=True)
@@ -971,11 +933,24 @@ def _():
     from astropy.table import Table, hstack
     from astropy.io import ascii
     import seaborn as sns
+    from matplotlib.ticker import AutoMinorLocator
 
     mpl.rcParams["text.usetex"] = False
     mpl.rcParams["font.size"] = 18.0
     mpl.rcParams["legend.fontsize"] = 16.0
-    return ascii, glob, hstack, mo, mpl, numpy, os, pandas, plt, sns
+    return (
+        AutoMinorLocator,
+        ascii,
+        glob,
+        hstack,
+        mo,
+        mpl,
+        numpy,
+        os,
+        pandas,
+        plt,
+        sns,
+    )
 
 
 if __name__ == "__main__":

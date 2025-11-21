@@ -156,37 +156,6 @@ class GCLoaders:
 
         return 1 / (1 + numpy.exp(-g))
 
-    def integrate_probability_of_recovery(self, f150w_min, f150w_max, log10_sigma_sky):
-        """
-        Analytical integration of the probability_of_recovery function over the specified ranges in F150W.
-        The local sky noise at a given pixel is given by the image of the local sky noise.
-
-        Input:
-        :param f150w_min : float
-            Lower bound of f150w (ABmag).
-        :param f150w_max : float
-            Upper bound of f150w (ABmag).
-        :param log10_sigma_sky_min : float
-            Lower bound of log10_sigma_sky.
-        :param log10_sigma_sky_max : float
-            Upper bound of log10_sigma_sky.
-
-        Output:
-        float
-            integral value.
-        """
-        b0 = 85.84
-        b1 = -2.59
-        b2 = -5.37
-        # evaluate the g function at the integration limits
-        g_min = b0 + b1 * f150w_min.value + b2 * log10_sigma_sky
-        g_max = b0 + b1 * f150w_max.value + b2 * log10_sigma_sky
-
-        result = (1 / b1) * numpy.log(numpy.exp(g_max) + 1) - (1 / b1) * numpy.log(
-            numpy.exp(g_min) + 1
-        )
-        return result
-
 
 class LambdaMapLoaders:
     """Mixin providing loader routines for different map types.

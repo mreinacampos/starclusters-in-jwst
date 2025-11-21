@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.17.7"
+__generated_with = "0.18.0"
 app = marimo.App(width="full")
 
 
@@ -35,12 +35,9 @@ def _(os):
     number_iterations = 100  # 200 #500
     # decide whether to be verbose
     do_verbose = False
-    # decide whether to apply the normalization
-    do_normalization = True
 
     # create the output path
-    add_path = "_with_normalization" if do_normalization else "_without_normalization"
-    out_path = os.path.join(".", "tables", "maps_to_maps" + add_path)
+    out_path = os.path.join(".", "tables", "maps_to_maps")
     if not os.path.exists(out_path):
         os.makedirs(out_path)
 
@@ -65,7 +62,7 @@ def _(os):
     if do_bright_gcs:
         ls_gcs_populations.append("Bright GCs")
         ls_gcs_labels.append("F150W$ < 29.5$")
-    
+
     for key in ls_gcs_populations:
         path = os.path.join(out_path, "imgs_" + key.replace(" ", "_"))
         if not os.path.exists(path):
@@ -102,7 +99,6 @@ def _(os):
     #ls_lambda_type = ["xray map"]
     return (
         do_figures,
-        do_normalization,
         do_verbose,
         ls_gcs_labels,
         ls_gcs_populations,
@@ -167,7 +163,6 @@ def _(
     Table,
     abell2744,
     do_figures,
-    do_normalization,
     do_verbose,
     ls_gcs_labels,
     ls_gcs_populations,
@@ -206,7 +201,6 @@ def _(
 
                 # prepare a dictionary to store the results
                 ls_results = []
-                ls_normalization = []
                 dict_results = {}
                 print(
                     f"\n*** {gcs_name}: {do_lambda_map1}--{do_lambda_map2} for {number_gcs} GCs"
@@ -270,14 +264,6 @@ def _(
                 map_prob_recovery.header = rebin_sky_noise_hdr_map1
                 # map to spawn datapoints from: a combination of LambdaMap1 and the pseudo-probability of recovery
                 wgt_img = lambda_map1.img * map_prob_recovery.img
-
-                # rebin the map of the local sky noise into the resolution of lambda map 2
-                # - used to calculate the normalization factor
-                (
-                    rebin_sky_noise_img_map2,
-                    rebin_sky_noise_wcs_map2,
-                    rebin_sky_noise_hdr_map2,
-                ) = mfc.reduce_and_rebin_image(lambda_map2, map_sky_noise)
 
                 if do_figures:
                     _fig = plt.figure(figsize=(20, 8.5))
@@ -507,33 +493,13 @@ def _(
                             do_lambda_map2,
                         )
 
-                    if do_normalization:
-                      if sample == 0:
-                          normalization = mfc.calculate_normalization_poisson_probability(
-                              f150w_min=bright_gcs.f150w.min(),
-                              f150w_max=bright_gcs.f150w.max(),
-                              map_sky_noise=rebin_sky_noise_img_map2,
-                              gcs=bright_gcs,
-                              lambda_map=lambda_map2,
-                          )
-                          print(
-                              f"[main] Normalization factor for {do_lambda_map2} is {normalization:.10e}"
-                          )
-                    else:
-                        normalization = 0.0
-                        if sample == 0:
-                          print(
-                              f"[main] No normalization factor applied for {do_lambda_map2}"
-                          )
-              
 
                     start = time.time()
                     ### Calculate the Poisson probability of observing the GCs given the lambda map and the selection function
                     ln_prob = mfc.calculate_continuous_spatial_poisson_probability(
-                        normalization, lambda_map2, datapoints, do_verbose=do_verbose
+                        lambda_map2, datapoints, do_verbose=do_verbose
                     )
                     ls_results.append(ln_prob)
-                    ls_normalization.append(normalization)
                     if do_verbose:
                         print(
                             f"[main] Time to calculate the probability - time elapsed = {time.time() - start:.2f} s"
@@ -542,18 +508,15 @@ def _(
                         print(
                             f"Sample {sample} done - ln_prob = {ln_prob} - time elapsed = {time.time() - start_time:.2f} s"
                         )
-                    
+
                     # delete the variables to save memory
                     del coords, datapoints, inds, ln_prob
-                
-                # store the log likelihoods and the normalizations applied
+
+                # store the log likelihoods 
                 dict_results[
                     "{:s}-{:s}".format(do_lambda_map1, do_lambda_map2)
                 ] = ls_results
-                dict_results[
-                    "normalization_{:s}-{:s}".format(do_lambda_map1, do_lambda_map2)
-                ] = ls_normalization
-            
+
                 print(f"Cross-testing of {do_lambda_map1}-{do_lambda_map2} is done")
 
                 # save the results to a table
@@ -568,7 +531,7 @@ def _(
                 print("Table saved to {:s}".format(tname))
 
                 # delete the variables to save memory
-                del gnr_inds, gnr_f150w, ls_results, ls_normalization,dict_results, table
+                del gnr_inds, gnr_f150w, ls_results,dict_results, table
 
             del lambda_map1, lambda_map2
         # delete the variables to save memory
