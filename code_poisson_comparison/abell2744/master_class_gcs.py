@@ -251,11 +251,15 @@ class GCs(GCLoaders):
                 )
             )
 
-    def create_footprint_gcs(self, map_wcs: wcs.WCS) -> None:
+    def create_footprint_gcs(self, map_wcs: wcs.WCS, do_remove_edges : bool = False) -> None:
         """Return a mask corresponding to the footprint of the GCs within the lambda map.
         :param map_wcs: WCS object of the LambdaMap / GCs
         :return: mask with the footprint of the GCs within the lambda map
         """
+        if do_remove_edges: # remove the edges of the lambda map that we had added to the GC sample
+            self.ra = self.ra[:-4]
+            self.dec = self.dec[:-4]
+
         # determine the projected coordinates of the GCs in pixels given a WCS object
         # convention determines that (0,0) refers to the center of the first pixel, not its corner (-0.5, -0.5)
         dummy_pixels = map_wcs.all_world2pix(self.ra.to("deg"), self.dec.to("deg"), 0)
@@ -270,6 +274,7 @@ class GCs(GCLoaders):
         dummy_points = numpy.asarray([])
         for i in range(len(ls_x) - 1):
             mask = (x > ls_x[i]) * (x < ls_x[i + 1])
+            #if numpy.sum(mask) == 0: continue
             # use the limits of the x-coordinates on the edges
             if i == 0:
                 point = [ls_x[i], y[mask].min() - map_wcs.pixel_shape[1] // 20]
@@ -286,6 +291,7 @@ class GCs(GCLoaders):
         for i in range(len(ls_x) - 1, 0, -1):
             mask = (x > ls_x[i - 1]) * (x < ls_x[i])
             # use the limits of the x-coordinates on the edges
+            #if numpy.sum(mask) == 0: continue
             if i == 1:
                 point = [ls_x[i - 1], y[mask].max() + map_wcs.pixel_shape[1] // 20]
             elif i == len(ls_x) - 1:
@@ -316,6 +322,7 @@ class GCs(GCLoaders):
         points = numpy.vstack((inds[0].flatten(), inds[1].flatten())).T
         # create a Path object with the polygon vertices
         path = Path(poly_verts)
+
         # create a mask with the polygon
         mask_footprint = path.contains_points(points)
         mask_footprint = mask_footprint.reshape(

@@ -32,6 +32,11 @@ class GCLoaders:
             os.path.join(inpath, "2404_00_catalogue_GCs_A2744_originalmosaic_psky*")
         )
 
+        if len(ls_files) == 0:
+            raise FileNotFoundError(
+                "No GC catalogue files found in the specified path -- check the relative paths."
+            )
+
         # read the photometric catalogue -- frame: fk5
         gc_catalogue = Table.read(
             ls_files[0],

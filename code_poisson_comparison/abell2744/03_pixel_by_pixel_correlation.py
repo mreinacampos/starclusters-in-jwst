@@ -99,8 +99,8 @@ def _():
     ]
     # ls_lambda_map = ["X-ray"]
     # ls_lambda_type = ["xray map"]
-    # ls_lambda_map = ["Price24"]
-    # ls_lambda_type = ["lensing map"]
+    #ls_lambda_map = ["Price24"]
+    #ls_lambda_type = ["lensing map"]
 
     # decide whether to do the figures
     do_figures = True
@@ -155,6 +155,8 @@ def _(
 
     dict_results = {"Lambda Map": []}
 
+    print("\n ### Starting the analysis ...")
+
     for _gcs_name, gcs_label in zip(ls_gcs_populations, ls_gcs_labels):
 
         _fig, axs = plt.subplots(2, 4, figsize=(20, 10), sharex=True)
@@ -175,6 +177,11 @@ def _(
                 abell2744,
             )
 
+            print("[main] Bright GCs info:")
+            print(f"  - min RA: {bright_gcs.ra.min()}")
+            print(f"  - max RA: {bright_gcs.ra.max()}")
+            print(f"  - min DEC: {bright_gcs.dec.min()}")
+            print(f"  - max DEC: {bright_gcs.dec.max()}")
             # create the instance of the lensing map class
             lambda_map = mfc.create_instance_lambda_map(
                 _type_map, do_lambda_map, bright_gcs, abell2744
@@ -183,10 +190,20 @@ def _(
                 lambda_map.img.transpose()
             )  # needs to be transposed to be 1-to-1
 
+            print("[main] Lambda map info:")
+            print(f"  - min: {lambda_map.img.min()}")
+            print(f"  - max: {lambda_map.img.max()}")
+
             # convert the convergence maps to projected mass surface densities
             if _type_map == "lensing map":
                 lambda_map.convert_to_projected_mass(abell2744)
-
+            
+            # mask GCs that are outside the edges of the lambda map
+            # but add the edges to extend the GC map to cover the same FOV as the lambda map
+            bright_gcs.mask_objects_outside_lambda_map(
+                lambda_map.wcs, do_add_edges=True
+            )
+        
             # smooth lambda map by the same kernel as the GC number density
             sigma_px = float(
               sigma_arcsec
@@ -199,20 +216,13 @@ def _(
                 )
             )
             # smoothed lambda map
-            lambda_map.img = scipy.ndimage.gaussian_filter(lambda_map.img.value, sigma_px) + 1e-10
-
-            # mask GCs that are outside the edges of the lambda map
-            bright_gcs.mask_objects_outside_lambda_map(
-                lambda_map.wcs, do_add_edges=True
-            )
+            dummy_img = scipy.ndimage.gaussian_filter(lambda_map.img.value, sigma_px)# + 1e-10
+            lambda_map.img = dummy_img * lambda_map.img.unit
 
             # create the WCS and header for the GCs
             bright_gcs.wcs, bright_gcs.header = bright_gcs.create_wcs_and_header(
                 numpy.ones(shape=lambda_map.img.shape)
             )
-            # bright_gcs.wcs = lambda_map.wcs.deepcopy()  # copy the WCS from the lambda map
-            # create the header for the GCs
-            # bright_gcs.header = lambda_map.header.copy()
 
             # create the number density image of GCs - units: arcsec^-2
             (
@@ -222,8 +232,8 @@ def _(
                 bright_gcs, lambda_map.img.T.shape, sigma_arcsec
             )
 
-            # create the footprint of the GCs
-            bright_gcs.create_footprint_gcs(lambda_map.wcs)
+            # create the footprint of the GCs - removing first the edges of the lambda map
+            bright_gcs.create_footprint_gcs(bright_gcs.wcs, do_remove_edges = True)
             print("[main] CREATING the footprint of the GCs from themselves")
 
             bright_gcs.nrho_img *= bright_gcs.intp_mask.T
@@ -272,6 +282,8 @@ def _(
             dict_results[f"{_gcs_name} - $r_{{\\rm S}}$"].append(_spearman_corr)
             dict_results[f"{_gcs_name} - $p$-value"].append(_p_value)
 
+            print("[main] Finished comparison!")
+        
         for _i, _ax in enumerate(axs):
             _ax.set_xscale("log")
             _ax.set_yscale("log")
@@ -294,7 +306,7 @@ def _(
         )
         plt.close()
         # mo.md(f"""Here's the plot!{mo.as_html(_fig)}""")
-
+        print()
     # save the results
     dict_results["Lambda Map"] = dict_results["Lambda Map"][:7]
 
@@ -305,35 +317,6 @@ def _(
     _table = Table(dict_results)
     _tname = os.path.join(out_path, f"table_spearman_rank.ecsv".replace(" ", "_"))
     _table.write(_tname, overwrite=True)
-    return dict_results, out_path
-
-
-@app.cell
-def _(Table, dict_results, ls_gcs_populations, os, out_path):
-    formats = {"Lambda Map": "%s"}
-    for _gcs_name in ls_gcs_populations:
-        formats[f"{_gcs_name} - $r_{{\\rm S}}$"] = "%.2f"
-        formats[f"{_gcs_name} - $p$-value"] = "%.2e"
-
-    _table = Table(dict_results)
-    # _tname = os.path.join(out_path, f"table_spearman_rank.latex".replace(" ", "_"))
-    # _table.write(_tname, overwrite = True, format = "ascii.latex")
-    _table.write(
-        os.path.join(out_path, f"table_spearman_rank.latex".replace(" ", "_")),
-        format="ascii.latex",
-        overwrite=True,
-        formats=formats,
-    )
-    return
-
-
-@app.cell
-def _(mo):
-    _df = mo.sql(
-        f"""
-
-        """
-    )
     return
 
 
@@ -732,7 +715,6 @@ def _():
     from astropy import constants as c
     from astropy.table import Table
     from matplotlib.colors import LogNorm, SymLogNorm, Normalize
-    from astropy.visualization.wcsaxes import add_scalebar
     from astropy.coordinates import SkyCoord
     import numpy.ma as ma
 
@@ -741,9 +723,6 @@ def _():
     from master_class_galaxy_cluster import GalaxyCluster
     from master_class_fits import FitsMap
     from master_class_gcs import GCs
-    import master_validation_figures as mvf
-    import master_functions_discrete as mfd
-    import master_functions_continuous as mfc
     import master_functions_abell2744 as mfgc
     import master_functions_continuous as mfc
 
