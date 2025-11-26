@@ -267,7 +267,8 @@ class GCs(GCLoaders):
         x = dummy_pixels[0].copy()
         y = dummy_pixels[1].copy()
         number_of_pixels = [map_wcs.pixel_shape[0], map_wcs.pixel_shape[1]]
-
+        print("[create_footprint_gcs] Creating the footprint of the GCs within the lambda map. Number of pixels: ({}, {})".format(number_of_pixels[0], number_of_pixels[1]))
+        
         # collect the edges of the spatial distribution of the GCs, which we'll use later to mask the interpolated map
         # pad them with +- 1% of the maximum value to make sure we're not missing any GCs
         ls_x = numpy.linspace(x.min(), x.max(), 30)
@@ -330,6 +331,7 @@ class GCs(GCLoaders):
         )
         # store the mask
         self.intp_mask = mask_footprint.copy()
+        print("[create_footprint_gcs] The footprint mask has been created with shape ", self.intp_mask.shape)
 
     def create_interpolated_map_probability_recovery_gcs(
         self,
