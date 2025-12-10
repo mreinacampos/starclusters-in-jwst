@@ -6,9 +6,11 @@ app = marimo.App(width="full")
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     # Figures: comparing the likelihood of the Poisson point process for the GC (sub-)samples and the maps
-    """)
+    """
+    )
     return
 
 
@@ -29,24 +31,28 @@ def _(os):
         "BCGless",
         "X-ray",
         "uniform",
-        #"noisy",
+        # "noisy",
     ]
     return labels, out_path
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Main program
-    """)
+    """
+    )
     return
 
 
 @app.cell
 def _(mo):
-    mo.md("""
+    mo.md(
+        """
     mo.md(r)
-    """)
+    """
+    )
     return
 
 
@@ -255,9 +261,11 @@ def _(
 
 @app.cell
 def _(mo):
-    mo.md("""
+    mo.md(
+        """
     mo.md(r)
-    """)
+    """
+    )
     return
 
 
@@ -284,7 +292,11 @@ def _(
 
         for j, gcs_name in enumerate(gc_samples):
             axs[j].annotate(
-                gcs_name, xy=(0.98, 0.95), xycoords="axes fraction", ha="right", va = "top"
+                gcs_name,
+                xy=(0.98, 0.95),
+                xycoords="axes fraction",
+                ha="right",
+                va="top",
             )
 
             # read the input tables
@@ -335,13 +347,20 @@ def _(
             ax.set_yticks(numpy.arange(len(labels)))
             ax.set_ylim(-0.5, len(labels) - 0.5)
             ax.invert_yaxis()
-            ax.tick_params(direction="in", which="both", bottom=True, top=True, left=True, right=True)
+            ax.tick_params(
+                direction="in",
+                which="both",
+                bottom=True,
+                top=True,
+                left=True,
+                right=True,
+            )
             # set minor ticks in xaxis
             ax.xaxis.set_minor_locator(AutoMinorLocator())
             ax.set_xlim(-5, 50)
             ax.axhline(3.5, ls=":", c="k", lw=0.5)
-            #ax.axhline(5.5, ls=":", c="k", lw=0.5)
-            #ax.axhline(6.5, ls=":", c="k", lw=0.5)
+            # ax.axhline(5.5, ls=":", c="k", lw=0.5)
+            # ax.axhline(6.5, ls=":", c="k", lw=0.5)
             if i == 0:
                 ax.set_yticklabels(labels)
             ax.set_xlabel(
@@ -493,7 +512,12 @@ def _(
     def fig_Zscore_per_selected_model(out_path=out_path, labels=labels):
         fig, axs = plt.subplots(1, 3, figsize=(18, 4.5), sharex=False, sharey=True)
         axs = axs.ravel()
-        gc_samples = ["Bright GCs", "Bright Blue GCs", "Bright Red GCs", "High-quality GCs"]
+        gc_samples = [
+            "Bright GCs",
+            "Bright Blue GCs",
+            "Bright Red GCs",
+            "High-quality GCs",
+        ]
         gc_colors = ["k", "C0", "C3", "C6"]
 
         ls_markers = ["s", "X", "p", "d", "o", "*", ">"]
@@ -519,18 +543,18 @@ def _(
                     c = f"C{j}"
 
                 # show the violin plots of the self map comparison
-                #try:
+                # try:
                 mean = numpy.mean(data_maps[f"{key}-{key}"])
                 sigma = numpy.std(data_maps[f"{key}-{key}"])
                 add_violin_plot(
                     axs[idx],
                     i,
-                    numpy.abs((data_maps[f"{key}-{key}"]-mean)/sigma),
-                    mean = 0,
-                    #sigma=sigma,
+                    numpy.abs((data_maps[f"{key}-{key}"] - mean) / sigma),
+                    mean=0,
+                    # sigma=sigma,
                     color=c,
                 )
-                #except:
+                # except:
                 #    print(f"{key}-{key} NOT ready yet")
                 #    continue
 
@@ -547,7 +571,7 @@ def _(
                         color=c,
                         s=200,
                         label=ll,
-                        zorder= 100,
+                        zorder=100,
                         edgecolor="k",
                     )
                 except:
@@ -557,7 +581,14 @@ def _(
             ax.set_yticks(numpy.arange(len(gc_samples)))
             ax.set_xlim(0, 50)
             ax.set_ylim(-0.8, len(gc_samples) - 0.8)
-            ax.tick_params(direction="in", which="both", bottom=True, top=True, left=True, right=True)
+            ax.tick_params(
+                direction="in",
+                which="both",
+                bottom=True,
+                top=True,
+                left=True,
+                right=True,
+            )
             # set minor ticks in xaxis
             ax.xaxis.set_minor_locator(AutoMinorLocator())
             if i == 0:
@@ -569,12 +600,22 @@ def _(
             ax.legend(loc="upper center", ncols=2, bbox_to_anchor=(0.5, 1.25))
 
         axs[0].annotate(
-            "Mass tracers", xy=(0.98, 0.95), xycoords="axes fraction", ha="right", va = "top"
+            "Mass tracers",
+            xy=(0.98, 0.95),
+            xycoords="axes fraction",
+            ha="right",
+            va="top",
         )
         axs[1].annotate(
-            "Stellar light", xy=(0.98, 0.95), xycoords="axes fraction", ha="right", va = "top"
+            "Stellar light",
+            xy=(0.98, 0.95),
+            xycoords="axes fraction",
+            ha="right",
+            va="top",
         )
-        axs[2].annotate("X-ray", xy=(0.98, 0.95), xycoords="axes fraction", ha="right", va = "top")
+        axs[2].annotate(
+            "X-ray", xy=(0.98, 0.95), xycoords="axes fraction", ha="right", va="top"
+        )
 
         left = 0.1
         right = 0.98
@@ -606,9 +647,11 @@ def _(
 
 @app.cell
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Self & cross-map comparison
-    """)
+    """
+    )
     return
 
 
@@ -650,19 +693,23 @@ def _(
 
             # Self-map comparison
             for _k in range(4):
-              try:
-                  mean = numpy.mean(data_maps[f"{key}-{key}"])
-                  sigma = numpy.std(data_maps[f"{key}-{key}"])
-                  add_violin_plot(
-                      axs[j], _k, numpy.abs((data_maps[f"{key}-{key}"]-mean)/sigma), mean = 0, color="k"
-                  )
-              except:
-                  print(f"{key}-{key} NOT ready yet")
-                  # mean = 0; sigma = 1
-                  # continue
+                try:
+                    mean = numpy.mean(data_maps[f"{key}-{key}"])
+                    sigma = numpy.std(data_maps[f"{key}-{key}"])
+                    add_violin_plot(
+                        axs[j],
+                        _k,
+                        numpy.abs((data_maps[f"{key}-{key}"] - mean) / sigma),
+                        mean=0,
+                        color="k",
+                    )
+                except:
+                    print(f"{key}-{key} NOT ready yet")
+                    # mean = 0; sigma = 1
+                    # continue
 
-            #idx += 1
-            #labels.append("Itself")
+            # idx += 1
+            # labels.append("Itself")
 
             try:
                 axs[j].scatter(
@@ -687,8 +734,8 @@ def _(
                     add_violin_plot(
                         axs[j],
                         idx,
-                        numpy.abs((data_maps[f"{key2}-{key}"]-mean)/sigma),
-                        mean = 0,
+                        numpy.abs((data_maps[f"{key2}-{key}"] - mean) / sigma),
+                        mean=0,
                         color=f"C{i}",
                     )
                 except:
@@ -700,16 +747,23 @@ def _(
             axs[j].set_yticklabels(labels)
             axs[j].invert_yaxis()
             axs[j].axhline(0.2, c="k", lw=0.5, ls="--")
-            #axs[j].axvline(0, c="k", lw=0.5, ls=":")
-            axs[j].tick_params(direction="in", which="both", bottom=True, top=True, left=True, right=True)
+            # axs[j].axvline(0, c="k", lw=0.5, ls=":")
+            axs[j].tick_params(
+                direction="in",
+                which="both",
+                bottom=True,
+                top=True,
+                left=True,
+                right=True,
+            )
             # set minor ticks in xaxis
             axs[j].xaxis.set_minor_locator(AutoMinorLocator())
             axs[j].set_xlim(0, 90)
         axs[-1].set_xlabel(
-                    "$|\\mathcal{Z}| = |(\\ln \\mathcal{P} - E[\\ln \\mathcal{P}])/\\sigma|$"
-                )
+            "$|\\mathcal{Z}| = |(\\ln \\mathcal{P} - E[\\ln \\mathcal{P}])/\\sigma|$"
+        )
 
-        #axs[5].set_axis_off()
+        # axs[5].set_axis_off()
 
         left = 0.1
         right = 0.98
@@ -729,8 +783,8 @@ def _(
         "Cha24_WL",
         "Original",
         "X-ray",
-        #"uniform",
-    ]  
+        # "uniform",
+    ]
 
     _fig = fig_Zscore_model_comparison_self_cross(out_path, _labels)
     mo.md(f""" Here's the plot! {mo.as_html(_fig)} """)
@@ -765,8 +819,9 @@ def _(labels, mo, numpy, os, out_path, pandas, plt, read_tables_models, sns):
             results,
             annot=True,
             square=True,
-            vmin=0, vmax=20,
-            cmap = "viridis",
+            vmin=0,
+            vmax=20,
+            cmap="viridis",
             cbar_kws={
                 "label": r"$|\mathcal{Z}|= |(E[\ln \mathcal{P}\{\lambda_1\}] - E[\ln \mathcal{P}\{\lambda_2\}])/\sigma_{{P}\{\lambda_2\}}|$"
             },
@@ -814,8 +869,9 @@ def _(mo, numpy, os, out_path, pandas, plt, read_tables_models, sns):
             results,
             annot=True,
             square=True,
-            vmin=0, vmax=20,
-            cmap = "viridis",
+            vmin=0,
+            vmax=20,
+            cmap="viridis",
             cbar_kws={
                 "label": r"$|\mathcal{Z}|= |(E[\ln \mathcal{P}\{\lambda_1\}] - E[\ln \mathcal{P}\{\lambda_2\}])/\sigma_{{P}\{\lambda_2\}}|$"
             },
@@ -844,9 +900,11 @@ def _(mo, numpy, os, out_path, pandas, plt, read_tables_models, sns):
 
 @app.cell
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Functions
-    """)
+    """
+    )
     return
 
 
@@ -867,6 +925,7 @@ def _(ascii, os):
             return_data = None
 
         return return_data
+
     return (read_tables_gcs,)
 
 
@@ -892,6 +951,7 @@ def _(ascii, glob, hstack, os):
             return_data = None
 
         return return_data
+
     return (read_tables_models,)
 
 
@@ -906,7 +966,7 @@ def add_violin_plot(ax, idx, data, mean, sigma=1, color="k"):
         showmedians=False,
         showextrema=False,
         bw_method=0.5,
-        side = "low"
+        side="low",
     )
     # make the violin bodies the same colour
     for pc in parts["bodies"]:
@@ -916,9 +976,11 @@ def add_violin_plot(ax, idx, data, mean, sigma=1, color="k"):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     # Modules
-    """)
+    """
+    )
     return
 
 

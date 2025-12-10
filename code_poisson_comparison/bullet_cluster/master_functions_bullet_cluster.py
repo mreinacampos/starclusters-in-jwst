@@ -11,6 +11,7 @@ from astropy.io import fits
 from astropy import wcs, constants
 import scipy.integrate
 
+
 class GCLoaders:
     """Mixin providing loader routines for different map types.
     Put any loading / creation routine here so users can edit them in one place.

@@ -6,13 +6,15 @@ app = marimo.App(width="medium")
 
 @app.cell
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     # Code to transform a table into a FITS image
     ## Author: Marta Reina-Campos
     ## Date: August 2025
 
     The code below transforms any column of a given table into a FITS image with the right header and WCS objects.
-    """)
+    """
+    )
     return
 
 
@@ -34,13 +36,15 @@ def _(
     do_validation_figure = False
 
     # define the filename and read the table
-    fname = os.path.join(".", "data", "GCs_Harris26", "2512_coords_sigmasky_corrected.txt")
-    #fname = os.path.join(".", "data", "GCs_Harris26", "old_skymatrix.txt")
+    fname = os.path.join(
+        ".", "data", "GCs_Harris26", "2512_coords_sigmasky_corrected.txt"
+    )
+    # fname = os.path.join(".", "data", "GCs_Harris26", "old_skymatrix.txt")
 
     table = ascii.read(
         fname,
         names=["RA", "DEC", "x (px)", "y (px)", "sigsky"],
-        #names=["RA", "DEC", "x (px)", "y (px)", "log(sigsky)"],
+        # names=["RA", "DEC", "x (px)", "y (px)", "log(sigsky)"],
         guess=False,
         fast_reader=False,
     )
@@ -48,43 +52,53 @@ def _(
     table["log(sigsky)"] = numpy.log10(table["sigsky"] + 1e-10)
 
     # convert to the original image coordinates and compress on the 10-pixel grid
-    table["orig img x (px)"], table["orig img y (px)"] = convert_to_original_image_coords(table["x (px)"], table["y (px)"])
+    (
+        table["orig img x (px)"],
+        table["orig img y (px)"],
+    ) = convert_to_original_image_coords(table["x (px)"], table["y (px)"])
     table["compress x (px)"] = (table["orig img x (px)"] / 10).astype(int)
     table["compress y (px)"] = (table["orig img y (px)"] / 10).astype(int)
 
     # convert back to coordinates in Nick's mosaics
-    table["reconv x (px)"], table["reconv y (px)"] = convert_to_table_coordinates(table["compress x (px)"], table["compress y (px)"])
+    table["reconv x (px)"], table["reconv y (px)"] = convert_to_table_coordinates(
+        table["compress x (px)"], table["compress y (px)"]
+    )
     # re-center in (0,0)
     table["reconv x (px)"] -= table["reconv x (px)"].min()
     table["reconv y (px)"] -= table["reconv y (px)"].min()
 
-    # Create the tilted image 
-    #img = numpy.ones(
+    # Create the tilted image
+    # img = numpy.ones(
     #    shape=(int(table["reconv x (px)"].max()) + 1, int(table["reconv y (px)"].max()) + 1)
-    #) * (table["log(sigsky)"].max() * 10)
-    #img[table["reconv x (px)"], table["reconv y (px)"]] = table["log(sigsky)"]
+    # ) * (table["log(sigsky)"].max() * 10)
+    # img[table["reconv x (px)"], table["reconv y (px)"]] = table["log(sigsky)"]
 
     # interpolate with the nearest neighbor to fill in the missing gaps
     xmin, xmax = table["reconv x (px)"].min(), table["reconv x (px)"].max()
     ymin, ymax = table["reconv y (px)"].min(), table["reconv y (px)"].max()
-    Ygrid, Xgrid = numpy.meshgrid(numpy.linspace(ymin, ymax, int(table["reconv y (px)"].max() + 1)) ,
-                                  numpy.linspace(xmin, xmax, int(table["reconv x (px)"].max() + 1)))
+    Ygrid, Xgrid = numpy.meshgrid(
+        numpy.linspace(ymin, ymax, int(table["reconv y (px)"].max() + 1)),
+        numpy.linspace(xmin, xmax, int(table["reconv x (px)"].max() + 1)),
+    )
     img = scipy.interpolate.griddata(
         points=numpy.column_stack((table["reconv x (px)"], table["reconv y (px)"])),
         values=table["log(sigsky)"],
         xi=(Xgrid, Ygrid),
-        method="linear"
+        method="linear",
     )
 
     ### VALIDATION -- plot the image
-    if do_validation_figure: 
+    if do_validation_figure:
         print("*** First validation figure - without tilting", img.shape)
         fig, ax = plt.subplots(1, figsize=(10, 6))
         cmap = plt.cm.viridis
         cmap.set_over("red")  # set the color for values above the maximum
         cmap.set_under("blue")  # set the color for values above the maximum
         img = numpy.ones(
-            shape=(int(table["compress x (px)"].max()) + 1, int(table["compress y (px)"].max()) + 1)
+            shape=(
+                int(table["compress x (px)"].max()) + 1,
+                int(table["compress y (px)"].max()) + 1,
+            )
         ) * (table["log(sigsky)"].max() * 10)
 
         img[table["compress x (px)"], table["compress y (px)"]] = table["log(sigsky)"]
@@ -94,7 +108,9 @@ def _(
         # add the colorbar
         cax = ax.inset_axes([0.0, 1.0001, 1.0, 0.02])  # [x0, y0, width, height]
         # create the colorbar object
-        cbar = fig.colorbar(cb, cax=cax, ax=ax, orientation="horizontal", location="top", extend = "both")
+        cbar = fig.colorbar(
+            cb, cax=cax, ax=ax, orientation="horizontal", location="top", extend="both"
+        )
         cbar.minorticks_on()  # add minorticks
         cbar.ax.xaxis.set_ticks_position("top")
         cbar.set_label(
@@ -113,14 +129,15 @@ def _(
     # add the colorbar
     cax = ax.inset_axes([0.0, 1.0001, 1.0, 0.02])  # [x0, y0, width, height]
     # create the colorbar object
-    cbar = fig.colorbar(cb, cax=cax, ax=ax, orientation="horizontal", location="top", extend = "both")
+    cbar = fig.colorbar(
+        cb, cax=cax, ax=ax, orientation="horizontal", location="top", extend="both"
+    )
     cbar.minorticks_on()  # add minorticks
     cbar.ax.xaxis.set_ticks_position("top")
     cbar.set_label(
         r"$\log_{10}(\sigma_{\rm sky})$",
     )  # add label
     plt.show()
-
 
     # convert the RA , DEC to astropy coordinate objects
     coords = SkyCoord(ra=table["RA"] * u.deg, dec=table["DEC"] * u.deg, frame="icrs")
@@ -130,14 +147,18 @@ def _(
     table["dec (arcsec)"] = coords.dec.to("arcsec")
 
     # convert it to a FITS file with the appropriate header
-    out_fname = os.path.join(".", "data", "GCs_Harris26", "2512_grid_localskynoise.fits")
+    out_fname = os.path.join(
+        ".", "data", "GCs_Harris26", "2512_grid_localskynoise.fits"
+    )
     create_fits_image(table, img, out_fname)
 
     ### VALIDATION
     # load the FITS image and WCS object
     with fits.open(out_fname, output_verify="fix") as _fits_table:
         _header = _fits_table[0].header
-        _img = _fits_table[0].data.T  # transpose the image, it is read as (rows, columns) otherwise
+        _img = _fits_table[
+            0
+        ].data.T  # transpose the image, it is read as (rows, columns) otherwise
         _wcs = wcs.WCS(_header)
     print("*** Second validation figure")
     fig, ax = plt.subplots(1, figsize=(10, 6), subplot_kw={"projection": _wcs})
@@ -166,9 +187,11 @@ def _():
 
 @app.cell
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ### Validation against the GC catalogue
-    """)
+    """
+    )
     return
 
 
@@ -220,15 +243,17 @@ app._unparsable_cell(
 
 
     """,
-    name="_"
+    name="_",
 )
 
 
 @app.cell
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Functions
-    """)
+    """
+    )
     return
 
 
@@ -240,7 +265,7 @@ def _(numpy):
     # (x', y') are the coordinates in Nick's mosaics (and the ones in the table)
     # (x, y) are the coordinates in the original image
     # x' = 2942.1 + 1.499564 x - 0.4341284 y
-    # y' = 3029.4 + 0.4341284 x + 1.499564 y 
+    # y' = 3029.4 + 0.4341284 x + 1.499564 y
     def convert_to_original_image_coords(xp: numpy.ndarray, yp: numpy.ndarray):
         a = 1.499564
         b = -0.4341284
@@ -253,7 +278,9 @@ def _(numpy):
         A_inv = numpy.linalg.inv(A)
 
         original_coords = numpy.dot(A_inv, numpy.array([xp - x0p, yp - y0p]))
-        return numpy.round(original_coords[0],0).astype(int), numpy.round(original_coords[1], 0).astype(int)
+        return numpy.round(original_coords[0], 0).astype(int), numpy.round(
+            original_coords[1], 0
+        ).astype(int)
 
     def convert_to_table_coordinates(xp: numpy.ndarray, yp: numpy.ndarray):
         a = 1.499564
@@ -265,7 +292,8 @@ def _(numpy):
 
         x = a * xp + b * yp + x0p
         y = c * xp + d * yp + y0p
-        return numpy.round(x,0).astype(int), numpy.round(y, 0).astype(int)
+        return numpy.round(x, 0).astype(int), numpy.round(y, 0).astype(int)
+
     return convert_to_original_image_coords, convert_to_table_coordinates
 
 
@@ -297,14 +325,19 @@ def _(Table, fits, numpy):
         def find_ind_nearest(array, value):
             ind = (numpy.abs(array - value)).argmin()
             return array[ind]
+
         print("[create fits image] Center of image is at", mid_pixels)
         # look for the closest pixel to the center of the image
         inds_x = find_ind_nearest(table["reconv x (px)"], mid_pixels[0])
-        inds_y = find_ind_nearest(table["reconv y (px)"][table["reconv x (px)"] == inds_x], mid_pixels[1])
+        inds_y = find_ind_nearest(
+            table["reconv y (px)"][table["reconv x (px)"] == inds_x], mid_pixels[1]
+        )
         mid_pixels = numpy.asarray([inds_x, inds_y])
         print("[create fits image] Center of image is at", mid_pixels)
 
-        mask = (table["reconv x (px)"] == mid_pixels[0]) * (table["reconv y (px)"] == mid_pixels[1])
+        mask = (table["reconv x (px)"] == mid_pixels[0]) * (
+            table["reconv y (px)"] == mid_pixels[1]
+        )
         print(numpy.sum(mask))
         print(numpy.sum((table["reconv x (px)"] == mid_pixels[0])))
         print(numpy.sum((table["reconv y (px)"] == mid_pixels[1])))
@@ -346,6 +379,7 @@ def _(Table, fits, numpy):
         hdul = fits.HDUList([primary_hdu])
         hdul.writeto(fname, overwrite=True)
         print("Saved {:s}".format(fname))
+
     return (create_fits_image,)
 
 

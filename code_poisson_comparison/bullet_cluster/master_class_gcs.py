@@ -251,12 +251,16 @@ class GCs(GCLoaders):
                 )
             )
 
-    def create_footprint_gcs(self, map_wcs: wcs.WCS, do_remove_edges : bool = False) -> None:
+    def create_footprint_gcs(
+        self, map_wcs: wcs.WCS, do_remove_edges: bool = False
+    ) -> None:
         """Return a mask corresponding to the footprint of the GCs within the lambda map.
         :param map_wcs: WCS object of the LambdaMap / GCs
         :return: mask with the footprint of the GCs within the lambda map
         """
-        if do_remove_edges: # remove the edges of the lambda map that we had added to the GC sample
+        if (
+            do_remove_edges
+        ):  # remove the edges of the lambda map that we had added to the GC sample
             self.ra = self.ra[:-4]
             self.dec = self.dec[:-4]
 
@@ -267,15 +271,19 @@ class GCs(GCLoaders):
         x = dummy_pixels[0].copy()
         y = dummy_pixels[1].copy()
         number_of_pixels = [map_wcs.pixel_shape[0], map_wcs.pixel_shape[1]]
-        print("[create_footprint_gcs] Creating the footprint of the GCs within the lambda map. Number of pixels: ({}, {})".format(number_of_pixels[0], number_of_pixels[1]))
-        
+        print(
+            "[create_footprint_gcs] Creating the footprint of the GCs within the lambda map. Number of pixels: ({}, {})".format(
+                number_of_pixels[0], number_of_pixels[1]
+            )
+        )
+
         # collect the edges of the spatial distribution of the GCs, which we'll use later to mask the interpolated map
         # pad them with +- 1% of the maximum value to make sure we're not missing any GCs
         ls_x = numpy.linspace(x.min(), x.max(), 30)
         dummy_points = numpy.asarray([])
         for i in range(len(ls_x) - 1):
             mask = (x > ls_x[i]) * (x < ls_x[i + 1])
-            #if numpy.sum(mask) == 0: continue
+            # if numpy.sum(mask) == 0: continue
             # use the limits of the x-coordinates on the edges
             if i == 0:
                 point = [ls_x[i], y[mask].min() - map_wcs.pixel_shape[1] // 20]
@@ -292,7 +300,7 @@ class GCs(GCLoaders):
         for i in range(len(ls_x) - 1, 0, -1):
             mask = (x > ls_x[i - 1]) * (x < ls_x[i])
             # use the limits of the x-coordinates on the edges
-            #if numpy.sum(mask) == 0: continue
+            # if numpy.sum(mask) == 0: continue
             if i == 1:
                 point = [ls_x[i - 1], y[mask].max() + map_wcs.pixel_shape[1] // 20]
             elif i == len(ls_x) - 1:
@@ -331,7 +339,10 @@ class GCs(GCLoaders):
         )
         # store the mask
         self.intp_mask = mask_footprint.copy()
-        print("[create_footprint_gcs] The footprint mask has been created with shape ", self.intp_mask.shape)
+        print(
+            "[create_footprint_gcs] The footprint mask has been created with shape ",
+            self.intp_mask.shape,
+        )
 
     def create_interpolated_map_probability_recovery_gcs(
         self,

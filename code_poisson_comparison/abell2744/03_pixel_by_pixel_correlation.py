@@ -6,17 +6,21 @@ app = marimo.App(width="full")
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     # Pixel-by-pixel correlation between two maps
-    """)
+    """
+    )
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Define properties of the galaxy cluster
-    """)
+    """
+    )
     return
 
 
@@ -41,17 +45,21 @@ def _(GalaxyCluster, u):
 
 @app.cell
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Load the GC catalogue
-    """)
+    """
+    )
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Decide the type of analysis
-    """)
+    """
+    )
     return
 
 
@@ -104,7 +112,6 @@ def _():
         "xray map",
     ]
 
-
     return (
         do_figures,
         do_smooth_lambda_map,
@@ -117,9 +124,11 @@ def _():
 
 @app.cell
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Main program
-    """)
+    """
+    )
     return
 
 
@@ -161,7 +170,6 @@ def _(
     print("\n ### Starting the analysis ...")
 
     for _gcs_name, gcs_label in zip(ls_gcs_populations, ls_gcs_labels):
-
         _fig, axs = plt.subplots(2, 4, figsize=(20, 10), sharex=True)
         axs = axs.ravel()
 
@@ -207,17 +215,19 @@ def _(
             if do_smooth_lambda_map:
                 # smooth lambda map by the same kernel as the GC number density
                 sigma_px = float(
-                sigma_arcsec
-                / (
-                    numpy.mean(
-                        numpy.abs(lambda_map.wcs.pixel_scale_matrix.diagonal())
-                        * u.deg.to("arcsec")
-                    )
-                    * u.arcsec
+                    sigma_arcsec
+                    / (
+                        numpy.mean(
+                            numpy.abs(lambda_map.wcs.pixel_scale_matrix.diagonal())
+                            * u.deg.to("arcsec")
+                        )
+                        * u.arcsec
                     )
                 )
                 # smoothed lambda map
-                dummy_img = scipy.ndimage.gaussian_filter(lambda_map.img.value, sigma_px)# + 1e-10
+                dummy_img = scipy.ndimage.gaussian_filter(
+                    lambda_map.img.value, sigma_px
+                )  # + 1e-10
                 lambda_map.img = dummy_img * lambda_map.img.unit
 
             # create the WCS and header for the GCs
@@ -234,7 +244,7 @@ def _(
             )
 
             # create the footprint of the GCs - removing first the edges of the lambda map
-            bright_gcs.create_footprint_gcs(lambda_map.wcs, do_remove_edges = True)
+            bright_gcs.create_footprint_gcs(lambda_map.wcs, do_remove_edges=True)
             print("[main] CREATING the footprint of the GCs from themselves")
 
             bright_gcs.nrho_img *= bright_gcs.intp_mask.T
@@ -360,11 +370,7 @@ def _(
             ):
                 print(f"\n *** [main] Comparing {_gcs_name} -- {do_lambda_map}")
                 # create the instance of the GCs class
-                bright_gcs = GCs(
-                    _gcs_name,
-                    gcs_label,
-                    abell2744
-                )
+                bright_gcs = GCs(_gcs_name, gcs_label, abell2744)
 
                 # create the instance of the lensing map class
                 lambda_map = mfc.create_instance_lambda_map(
@@ -394,7 +400,7 @@ def _(
                 )
 
                 # create the footprint of the GCs
-                bright_gcs.create_footprint_gcs(lambda_map.wcs, do_remove_edges = True)
+                bright_gcs.create_footprint_gcs(lambda_map.wcs, do_remove_edges=True)
                 print("[main] CREATING the footprint of the GCs from themselves")
 
                 bright_gcs.nrho_img *= bright_gcs.intp_mask.T
@@ -494,9 +500,11 @@ def _(
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Functions
-    """)
+    """
+    )
     return
 
 
@@ -648,6 +656,7 @@ def _(LogNorm, numpy, os, plt):
         )
         fig.savefig(os.path.join(out_path, fname), bbox_inches="tight")
         plt.close()
+
     return (figure_side_by_side_number_density_gcs_lambda_map,)
 
 
@@ -658,9 +667,11 @@ def renormalize_img(img, min=0, max=1):
 
 @app.cell
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Modules
-    """)
+    """
+    )
     return
 
 

@@ -227,7 +227,7 @@ def calculate_continuous_spatial_poisson_probability(
     mask = numpy.isinf(ln_effective_rate) | numpy.isnan(ln_effective_rate)
     if numpy.sum(mask):
         print("Missing data on {:d} points".format(numpy.sum(mask)))
-    # calculate the Poisson probability as ln P = sum_i ln(ln_effective_rate) 
+    # calculate the Poisson probability as ln P = sum_i ln(ln_effective_rate)
     ln_prob = numpy.sum(ln_effective_rate[~mask])
 
     if do_verbose:
