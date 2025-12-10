@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.18.0"
+__generated_with = "0.18.4"
 app = marimo.App(width="full")
 
 
@@ -63,6 +63,12 @@ def _():
     do_bright_red_gcs = True
     do_high_quality_gcs = True
 
+    # decide if you want to smooth the lambda map by the same kernel as the GCs
+    do_smooth_lambda_map = False
+
+    # decide whether to do the figures
+    do_figures = True
+
     ls_gcs_populations = []
     ls_gcs_labels = []
     if do_bright_gcs:
@@ -97,15 +103,11 @@ def _():
         "bcgless map",
         "xray map",
     ]
-    #ls_lambda_map = ["uniform"]
-    #ls_lambda_type = ["uniform map"]
-    #ls_lambda_map = ["Price24"]
-    #ls_lambda_type = ["lensing map"]
 
-    # decide whether to do the figures
-    do_figures = True
+
     return (
         do_figures,
+        do_smooth_lambda_map,
         ls_gcs_labels,
         ls_gcs_populations,
         ls_lambda_map,
@@ -127,6 +129,7 @@ def _(
     Table,
     abell2744,
     do_figures,
+    do_smooth_lambda_map,
     figure_side_by_side_number_density_gcs_lambda_map,
     ls_gcs_labels,
     ls_gcs_populations,
@@ -201,26 +204,27 @@ def _(
                 lambda_map.wcs, do_add_edges=True
             )
 
-            # smooth lambda map by the same kernel as the GC number density
-            sigma_px = float(
-              sigma_arcsec
-              / (
-                  numpy.mean(
-                      numpy.abs(lambda_map.wcs.pixel_scale_matrix.diagonal())
-                      * u.deg.to("arcsec")
-                  )
-                  * u.arcsec
+            if do_smooth_lambda_map:
+                # smooth lambda map by the same kernel as the GC number density
+                sigma_px = float(
+                sigma_arcsec
+                / (
+                    numpy.mean(
+                        numpy.abs(lambda_map.wcs.pixel_scale_matrix.diagonal())
+                        * u.deg.to("arcsec")
+                    )
+                    * u.arcsec
+                    )
                 )
-            )
-            # smoothed lambda map
-            dummy_img = scipy.ndimage.gaussian_filter(lambda_map.img.value, sigma_px)# + 1e-10
-            lambda_map.img = dummy_img * lambda_map.img.unit
+                # smoothed lambda map
+                dummy_img = scipy.ndimage.gaussian_filter(lambda_map.img.value, sigma_px)# + 1e-10
+                lambda_map.img = dummy_img * lambda_map.img.unit
 
             # create the WCS and header for the GCs
             bright_gcs.wcs, bright_gcs.header = bright_gcs.create_wcs_and_header(
                 numpy.ones(shape=lambda_map.img.shape)
             )
-        
+
             # create the number density image of GCs - units: arcsec^-2
             (
                 bright_gcs.nrho_img,

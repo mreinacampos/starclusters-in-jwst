@@ -1,4 +1,4 @@
-### Script containing the basic routines for reading the GC catalogue of Abell 2744
+### Script containing the basic routines for reading the GC catalogue of Bullet Cluster
 ### Author: Marta Reina-Campos
 ### Date: October 2025
 
@@ -10,7 +10,6 @@ from master_class_galaxy_cluster import GalaxyCluster
 from astropy.io import fits
 from astropy import wcs, constants
 import scipy.integrate
-
 
 class GCLoaders:
     """Mixin providing loader routines for different map types.
@@ -27,7 +26,7 @@ class GCLoaders:
     def load_gc_catalogue(self) -> Table:
         """Function to load the GC catalogue for Abell 2744, and apply some preliminary colour cuts"""
         # input path of the photometric catalogue
-        inpath = os.path.join(".", "data", "GCs_Harris23")
+        inpath = os.path.join(".", "data", "GCs_Harris26")
         ls_files = glob.glob(
             os.path.join(inpath, "2404_00_catalogue_GCs_A2744_originalmosaic_psky*")
         )

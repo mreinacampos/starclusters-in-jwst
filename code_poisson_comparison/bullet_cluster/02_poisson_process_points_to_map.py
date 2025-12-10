@@ -1,13 +1,12 @@
 import marimo
 
-__generated_with = "0.17.7"
+__generated_with = "0.18.0"
 app = marimo.App(width="full")
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Point-to-map comparisons via an inhomogeneous Poisson point process
 
     Notebook to calculate the log-likelihood of a given GC population to have been spawned from a continuous map/image assuming an inhomogenous Poisson point process
@@ -29,18 +28,15 @@ def _(mo):
 
     Outputs:
     * Log-likelihood values for each GC population and each lambda map
-    """
-    )
+    """)
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Decide the type of analysis
-    """
-    )
+    """)
     return
 
 
@@ -115,11 +111,9 @@ def _(os):
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Define properties of the galaxy cluster
-    """
-    )
+    """)
     return
 
 
@@ -144,11 +138,9 @@ def _(GalaxyCluster, u):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Main program
-    """
-    )
+    """)
     return
 
 
@@ -221,23 +213,13 @@ def _(
                 rebin_sky_noise_hdr,
             ) = mfc.reduce_and_rebin_image(lambda_map, map_sky_noise)
 
-            normalization = mfc.calculate_normalization_poisson_probability(
-                f150w_min=bright_gcs.f150w.min(),
-                f150w_max=bright_gcs.f150w.max(),
-                map_sky_noise=rebin_sky_noise_img,
-                gcs=bright_gcs,
-                lambda_map=lambda_map,
-            )
-            print(
-                f"[main] Normalization factor for {do_lambda_map} is {normalization:.4e}"
-            )
-
             start = time.time()
             ### Calculate the Poisson probability of observing the GCs given the lambda map and the selection function
             ln_prob = mfc.calculate_continuous_spatial_poisson_probability(
-                normalization, lambda_map, bright_gcs, do_verbose=do_verbose
+                lambda_map, bright_gcs, do_verbose=do_verbose
             )
             dict_results[do_lambda_map] = [ln_prob]
+        
             print(
                 "Time to calculate the spatial Poisson probability: {:.2f} s".format(
                     time.time() - start
@@ -276,21 +258,17 @@ def _(
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Functions
-    """
-    )
+    """)
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Modules
-    """
-    )
+    """)
     return
 
 
@@ -308,8 +286,7 @@ def _():
     import master_validation_figures as mvf
     import master_functions_discrete as mfd
     import master_functions_continuous as mfc
-    import code_poisson_comparison.bullet_cluster.master_functions_bullet_cluster as mfgc
-
+    import master_functions_abell2744 as mfgc
     return FitsMap, GCs, GalaxyCluster, Table, mfc, mo, mvf, os, time, u
 
 

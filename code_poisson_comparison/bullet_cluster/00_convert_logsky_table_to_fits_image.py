@@ -1,37 +1,126 @@
 import marimo
 
-__generated_with = "0.17.2"
+__generated_with = "0.18.0"
 app = marimo.App(width="medium")
 
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Code to transform a table into a FITS image
     ## Author: Marta Reina-Campos
     ## Date: August 2025
 
     The code below transforms any column of a given table into a FITS image with the right header and WCS objects.
-    """
-    )
+    """)
     return
 
 
 @app.cell
-def _(SkyCoord, ascii, create_fits_image, fits, numpy, os, plt, u, wcs):
+def _(
+    SkyCoord,
+    ascii,
+    convert_to_original_image_coords,
+    convert_to_table_coordinates,
+    create_fits_image,
+    fits,
+    numpy,
+    os,
+    plt,
+    scipy,
+    u,
+    wcs,
+):
+    do_validation_figure = False
+
     # define the filename and read the table
-    fname = os.path.join(".", "data", "GCs_Harris26", "skymatrix.txt")
+    fname = os.path.join(".", "data", "GCs_Harris26", "2512_coords_sigmasky_corrected.txt")
+    #fname = os.path.join(".", "data", "GCs_Harris26", "old_skymatrix.txt")
+
     table = ascii.read(
         fname,
-        names=["RA", "DEC", "x (px)", "y (px)", "log(sigsky)"],
+        names=["RA", "DEC", "x (px)", "y (px)", "sigsky"],
+        #names=["RA", "DEC", "x (px)", "y (px)", "log(sigsky)"],
         guess=False,
         fast_reader=False,
     )
+    # calculate the log of sigsky
+    table["log(sigsky)"] = numpy.log10(table["sigsky"] + 1e-10)
 
-    # redefine the coordinates -- now pixels of the image
-    table["img x (px)"] = ((table["x (px)"] - table["x (px)"].min()) / 10).astype(int)
-    table["img y (px)"] = ((table["y (px)"] - table["y (px)"].min()) / 10).astype(int)
+    # convert to the original image coordinates and compress on the 10-pixel grid
+    table["orig img x (px)"], table["orig img y (px)"] = convert_to_original_image_coords(table["x (px)"], table["y (px)"])
+    table["compress x (px)"] = (table["orig img x (px)"] / 10).astype(int)
+    table["compress y (px)"] = (table["orig img y (px)"] / 10).astype(int)
+
+    # convert back to coordinates in Nick's mosaics
+    table["reconv x (px)"], table["reconv y (px)"] = convert_to_table_coordinates(table["compress x (px)"], table["compress y (px)"])
+    # re-center in (0,0)
+    table["reconv x (px)"] -= table["reconv x (px)"].min()
+    table["reconv y (px)"] -= table["reconv y (px)"].min()
+
+    # Create the tilted image 
+    #img = numpy.ones(
+    #    shape=(int(table["reconv x (px)"].max()) + 1, int(table["reconv y (px)"].max()) + 1)
+    #) * (table["log(sigsky)"].max() * 10)
+    #img[table["reconv x (px)"], table["reconv y (px)"]] = table["log(sigsky)"]
+
+    # interpolate with the nearest neighbor to fill in the missing gaps
+    xmin, xmax = table["reconv x (px)"].min(), table["reconv x (px)"].max()
+    ymin, ymax = table["reconv y (px)"].min(), table["reconv y (px)"].max()
+    Ygrid, Xgrid = numpy.meshgrid(numpy.linspace(ymin, ymax, int(table["reconv y (px)"].max() + 1)) ,
+                                  numpy.linspace(xmin, xmax, int(table["reconv x (px)"].max() + 1)))
+    img = scipy.interpolate.griddata(
+        points=numpy.column_stack((table["reconv x (px)"], table["reconv y (px)"])),
+        values=table["log(sigsky)"],
+        xi=(Xgrid, Ygrid),
+        method="linear"
+    )
+
+    ### VALIDATION -- plot the image
+    if do_validation_figure: 
+        print("*** First validation figure - without tilting", img.shape)
+        fig, ax = plt.subplots(1, figsize=(10, 6))
+        cmap = plt.cm.viridis
+        cmap.set_over("red")  # set the color for values above the maximum
+        cmap.set_under("blue")  # set the color for values above the maximum
+        img = numpy.ones(
+            shape=(int(table["compress x (px)"].max()) + 1, int(table["compress y (px)"].max()) + 1)
+        ) * (table["log(sigsky)"].max() * 10)
+
+        img[table["compress x (px)"], table["compress y (px)"]] = table["log(sigsky)"]
+        cb = ax.imshow(img.T, origin="lower", vmin=0.2, vmax=2, cmap=cmap)
+        ax.set_ylabel("Image y (px)")
+        ax.set_xlabel("Image x (px)")
+        # add the colorbar
+        cax = ax.inset_axes([0.0, 1.0001, 1.0, 0.02])  # [x0, y0, width, height]
+        # create the colorbar object
+        cbar = fig.colorbar(cb, cax=cax, ax=ax, orientation="horizontal", location="top", extend = "both")
+        cbar.minorticks_on()  # add minorticks
+        cbar.ax.xaxis.set_ticks_position("top")
+        cbar.set_label(
+            r"$\log_{10}(\sigma_{\rm sky})$",
+        )  # add label
+        plt.show()
+
+    ### VALIDATION -- plot the tilted & interpolated image
+    fig, ax = plt.subplots(1, figsize=(10, 6))
+    cmap = plt.cm.viridis
+    cmap.set_over("red")  # set the color for values above the maximum
+    cmap.set_under("blue")  # set the color for values above the maximum
+    cb = ax.imshow(img.T, origin="lower", vmin=0.2, vmax=2, cmap=cmap)
+    ax.set_ylabel("Image y (px)")
+    ax.set_xlabel("Image x (px)")
+    # add the colorbar
+    cax = ax.inset_axes([0.0, 1.0001, 1.0, 0.02])  # [x0, y0, width, height]
+    # create the colorbar object
+    cbar = fig.colorbar(cb, cax=cax, ax=ax, orientation="horizontal", location="top", extend = "both")
+    cbar.minorticks_on()  # add minorticks
+    cbar.ax.xaxis.set_ticks_position("top")
+    cbar.set_label(
+        r"$\log_{10}(\sigma_{\rm sky})$",
+    )  # add label
+    plt.show()
+
 
     # convert the RA , DEC to astropy coordinate objects
     coords = SkyCoord(ra=table["RA"] * u.deg, dec=table["DEC"] * u.deg, frame="icrs")
@@ -40,32 +129,15 @@ def _(SkyCoord, ascii, create_fits_image, fits, numpy, os, plt, u, wcs):
     table["ra (arcsec)"] = coords.ra.to("arcsec")
     table["dec (arcsec)"] = coords.dec.to("arcsec")
 
-    # create the image by reshaping the array of log(sigsky)
-    # set a dummy value of -10
-    img = numpy.ones(
-        shape=(table["img x (px)"].max() + 1, table["img y (px)"].max() + 1)
-    ) * (table["log(sigsky)"].max() * 3)
-    img[table["img x (px)"], table["img y (px)"]] = table["log(sigsky)"]
-
-    ### VALIDATION -- plot the image
-    print("*** First validation figure", img.shape)
-    fig, ax = plt.subplots(1, figsize=(10, 6))
-    ax.imshow(img.T, origin="lower", vmin=0, vmax=2, cmap="viridis")
-    ax.set_ylabel("Image y (px)")
-    ax.set_xlabel("Image x (px)")
-    plt.show()
-
     # convert it to a FITS file with the appropriate header
-    out_fname = os.path.join(".", "data", "GCs_Harris26", "2511_skynoise_grid.fits")
+    out_fname = os.path.join(".", "data", "GCs_Harris26", "2512_grid_localskynoise.fits")
     create_fits_image(table, img, out_fname)
 
     ### VALIDATION
     # load the FITS image and WCS object
     with fits.open(out_fname, output_verify="fix") as _fits_table:
         _header = _fits_table[0].header
-        _img = _fits_table[
-            0
-        ].data.T  # transpose the image, it is read as (rows, columns) otherwise
+        _img = _fits_table[0].data.T  # transpose the image, it is read as (rows, columns) otherwise
         _wcs = wcs.WCS(_header)
     print("*** Second validation figure")
     fig, ax = plt.subplots(1, figsize=(10, 6), subplot_kw={"projection": _wcs})
@@ -78,210 +150,123 @@ def _(SkyCoord, ascii, create_fits_image, fits, numpy, os, plt, u, wcs):
     cbar.set_label(r"$\log_{10}(\sigma_{\rm sky})$")  # add label
 
     plt.show()
-    return (out_fname,)
 
-
-@app.cell
-def _(mo):
-    mo.md(r"""### Validation against the Price24 Lambda Map""")
     return
 
 
 @app.cell
-def _(fits, numpy, os, out_fname, plt, u, wcs):
-    if True:
+def _():
+    return
 
-        def figure_noise_map_with_lambda_map_contours(
-            noise_img, noise_wcs, lensing_img, lensing_wcs, **kwargs
-        ):
-            def add_panel_noise_map(ax, img, label="", lim_cbar=[0, 1]):
-                # cb = ax.imshow(img.T, origin = "lower", cmap = cmap, norm = LogNorm(vmin = lim_cbar[0], vmax = lim_cbar[1]), zorder = 0)
-                levels = [-4, 1.8, 2.1, 2.4, 6]
-                colors = plt.get_cmap("Greys")(numpy.linspace(0.2, 1, len(levels)))
-                ax.contourf(img.T, levels=levels, colors=colors, alpha=0.8)
-                ax.annotate(
-                    label,
-                    xy=(0.98, 0.98),
-                    ha="right",
-                    va="top",
-                    xycoords="axes fraction",
-                    color="white",
-                )
 
-            def add_panel_stellar_light_map(ax, lmap, cmap, label="", lim_cbar=[0, 1]):
-                img = lmap.T / numpy.median(lmap[lmap > 0])
-                min_img = numpy.percentile(img[img > 0], 1)
-                max_img = numpy.percentile(img[img > 0], 97)
-                cb = ax.imshow(
-                    img,
-                    origin="lower",
-                    cmap=cmap,
-                    norm=Normalize(vmin=min_img, vmax=max_img),
-                    zorder=0,
-                )
-                ax.annotate(
-                    label,
-                    xy=(0.98, 0.98),
-                    ha="right",
-                    va="top",
-                    xycoords="axes fraction",
-                    color="black",
-                )
-
-            def add_lensing_map_contours(
-                ax, lensing_img, lensing_wcs, label="", **kwargs
-            ):
-                levels = [
-                    numpy.power(10, 8.3),
-                    numpy.power(10, 8.5),
-                    numpy.power(10, 8.7),
-                    numpy.power(10, 8.9),
-                    numpy.power(10, 9.1),
-                ]
-                colors = plt.get_cmap("magma")(numpy.linspace(0.2, 1, len(levels)))
-                contours = ax.contour(
-                    lensing_img.T,
-                    levels=levels,
-                    colors=colors,
-                    transform=ax.get_transform(lensing_wcs),
-                )
-                # ax.annotate(label, xy = (0.98, 0.02), ha = "right", va = "bottom", xycoords = "axes fraction", color = "black")
-
-            fig = plt.figure(figsize=(8, 6.5))
-            left = 0.1
-            right = 0.87
-            top = 0.98
-            bottom = 0.1
-            hspace = 0.0
-            wspace = 0.05
-            axs = []
-
-            # lensing map
-            ax = fig.add_subplot(111, projection=noise_wcs)
-            add_panel_noise_map(
-                ax, noise_img, label=r"$\log_{10}(\sigma_{\rm sky})$", lim_cbar=[-4, 6]
-            )
-            # add_panel_stellar_light_map(ax, noise_img, label = "Stellar light", cmap = "Greys")
-            axs.append(ax)
-
-            # add the contours of the lambda map
-            add_lensing_map_contours(
-                ax, lensing_img, lensing_wcs, label="Price24", **kwargs
-            )
-
-            # find the limits of the image for the bright GCs sample in (RA, DEC)
-            p24_xlim_ra = numpy.asarray(
-                lensing_wcs.all_pix2world([0, lensing_img.shape[0]], [0, 0], 0)
-            )[0]
-            p24_ylim_dec = numpy.asarray(
-                lensing_wcs.all_pix2world([0, 0], [0, lensing_img.shape[1]], 0)
-            )[1]
-
-            # format all axes
-            for j, ax in zip(range(10), axs):
-                ra = ax.coords[0]
-                dec = ax.coords[1]
-                if j % 3 == 0:
-                    dec.set_axislabel("Declination (J2000)")
-                else:
-                    dec.set_ticks_visible(True)
-                    dec.set_ticklabel_visible(False)
-                    dec.set_axislabel("")
-
-                ra.set_axislabel("Right Ascension (J2000)")
-
-                # set the formatting of the axes
-                ra.set_major_formatter("hh:mm:ss.s")
-                dec.set_major_formatter("dd:mm")
-                # display minor ticks
-                ra.display_minor_ticks(True)
-                dec.display_minor_ticks(True)
-                # ra.set_minor_frequency(10)
-                # dec.set_minor_frequency(12)
-                ra.tick_params(
-                    which="major",
-                    direction="in",
-                    top=True,
-                    bottom=True,
-                    length=10,
-                    width=1,
-                )
-                dec.tick_params(
-                    which="major",
-                    direction="in",
-                    right=True,
-                    left=True,
-                    length=10,
-                    width=1,
-                )
-                ra.tick_params(which="minor", length=5)
-                dec.tick_params(which="minor", length=5)
-
-                # for each sample, covert the edges in (RA,DEC) to pixels and apply those limits to the panel
-                lim_pix = noise_wcs.all_world2pix(p24_xlim_ra, p24_ylim_dec, 0)
-                ax.set_xlim(lim_pix[0])
-                ax.set_ylim(lim_pix[1])
-
-                ax.set_aspect("equal", adjustable="datalim")
-            # format the entire figure
-            fig.subplots_adjust(
-                left=left,
-                top=top,
-                bottom=bottom,
-                right=right,
-                hspace=hspace,
-                wspace=wspace,
-            )
-            fig.savefig(
-                os.path.join("./", "xy_noisemap_price24.pdf"), bbox_inches="tight"
-            )
-            plt.show()
-
-        # load the FITS image and WCS object
-        with fits.open(out_fname, output_verify="fix") as _fits_table:
-            header = _fits_table[0].header
-            _img = _fits_table[
-                0
-            ].data.T  # transpose the image, it is read as (rows, columns) otherwise
-            _wcs = wcs.WCS(header)
-            print(_img.shape)
-            print(_wcs)
-            for key in header.keys():
-                print(f"{key}: {header[key]}")
-        print(_img.min(), _img.max())
-
-        from matplotlib.colors import Normalize
-        from master_class_galaxy_cluster import GalaxyCluster
-        from master_class_lambdamaps import (
-            LensingMap,
-            StellarLightMap,
-        )
-
-        p24_lambda = LensingMap("Price24", "lensing map")
-
-        # create the instance of the Galaxy Cluster class for Abell 2744
-        abell2744 = GalaxyCluster(
-            "Abell2744",
-            distance=1630 * u.Mpc,
-            redshift=0.308,
-            arcsec_to_kpc=2100 * u.kpc / (460 * u.arcsec),
-        )
-        # convert all the convergence maps to projected mass maps
-        p24_lambda.convert_to_projected_mass(abell2744)
-        figure_noise_map_with_lambda_map_contours(
-            _img, _wcs, p24_lambda.img_mass.value, p24_lambda.wcs
-        )
-
-        mosaic_avg = StellarLightMap("Original", "stellar light")
-
-        # figure_noise_map_with_lambda_map_contours(mosaic_avg.img.value, mosaic_avg.wcs, p24_lambda.img_mass.value, p24_lambda.wcs)
+@app.cell
+def _():
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(r"""## Functions""")
+    mo.md(r"""
+    ### Validation against the GC catalogue
+    """)
     return
+
+
+app._unparsable_cell(
+    r"""
+    ### VALIDATION
+
+    # define the filename and read the table
+    _fname = os.path.join(\".\", \"data\", \"GCs_Harris26\", \"2512_bullet_pointsources_corrected.txt\")
+
+    _table = ascii.read(
+        _fname,
+        names=[\"RA\", \"DEC\", \"x (px)\", \"y (px)\", \"prob\" ,\"F090W\", \"F090W +-\", \"F115W\", \"F115W +-\", \"F150W\", \"F150W +-\", \"F200W\", \"F200W +-\",     \"sh090\", \"sh115\", \"sh150\", \"sh200\", \"lg(skgsky)\"],
+        guess=False,
+        fast_reader=False,
+    )
+
+    # load the FITS image and WCS object
+    with fits.open(out_fname, output_verify=\"fix\") as _fits_table:
+        _header = _fits_table[0].header
+        _img = _fits_table[0].data.T  # transpose the image, it is read as (rows, columns) otherwise
+        _wcs = wcs.WCS(_header)
+    print(\"*** Second validation figure\")
+    _fig, _ax = plt.subplots(1, figsize=(10, 6), subplot_kw={\"projection\": _wcs})
+    _cb = _ax.imshow(_img.T, origin=\"lower\", cmap=\"Greys\", vmin=0, vmax=2)
+    _coords = SkyCoord(
+                ra=_table[\"RA\"] * u.deg,
+                dec=_table[\"DEC\"] * u.deg,
+                frame=\"fk5\",
+            )
+    _ax.scatter(_coords.ra, _coords.dec, transform=_ax.get_transform(\"fk5\"), s=1, alpha = _table[\"prob\"])
+    # add the colorbar
+    _cax = _ax.inset_axes([1.001, 0.0, 0.02, 1.0])  # [x0, y0, width, height]
+    # create the colorbar object
+    _cbar = _fig.colorbar(_cb, cax=_cax, ax=_ax)
+    _cbar.minorticks_on()  # add minorticks
+    _cbar.set_label(r\"$\log_{10}(\sigma_{\rm sky})$\")  # add label
+    ra = _ax.coords[0]
+    dec = _ax.coords[1]
+    dec.set_axislabel(\"Declination (J2000)\")4›
+    ra.set_axislabel(\"Right Ascension (J2000)\")
+    for obj in [ra, dec]:
+        # set the formatting of the axes
+        obj.set_major_formatter(\"dd:mm:ss\")
+        # display minor ticks
+        obj.display_minor_ticks(True)
+        obj.set_minor_frequency(10)
+    plt.show()
+
+
+    """,
+    name="_"
+)
+
+
+@app.cell
+def _(mo):
+    mo.md(r"""
+    ## Functions
+    """)
+    return
+
+
+@app.cell
+def _(numpy):
+    # convert the coordinates in Nicks' mosaics into the original image to determine the size of the grid
+    # Numbers come from the transformation applied by Bill (units are pixels)
+    # rotation of 343.854 and stretch of 1.56441
+    # (x', y') are the coordinates in Nick's mosaics (and the ones in the table)
+    # (x, y) are the coordinates in the original image
+    # x' = 2942.1 + 1.499564 x - 0.4341284 y
+    # y' = 3029.4 + 0.4341284 x + 1.499564 y 
+    def convert_to_original_image_coords(xp: numpy.ndarray, yp: numpy.ndarray):
+        a = 1.499564
+        b = -0.4341284
+        c = 0.4341284
+        d = 1.499564
+        x0p = 2942.1
+        y0p = 3029.4
+
+        A = numpy.array([[a, b], [c, d]])
+        A_inv = numpy.linalg.inv(A)
+
+        original_coords = numpy.dot(A_inv, numpy.array([xp - x0p, yp - y0p]))
+        return numpy.round(original_coords[0],0).astype(int), numpy.round(original_coords[1], 0).astype(int)
+
+    def convert_to_table_coordinates(xp: numpy.ndarray, yp: numpy.ndarray):
+        a = 1.499564
+        b = -0.4341284
+        c = 0.4341284
+        d = 1.499564
+        x0p = 2942.1
+        y0p = 3029.4
+
+        x = a * xp + b * yp + x0p
+        y = c * xp + d * yp + y0p
+        return numpy.round(x,0).astype(int), numpy.round(y, 0).astype(int)
+    return convert_to_original_image_coords, convert_to_table_coordinates
 
 
 @app.cell
@@ -304,18 +289,28 @@ def _(Table, fits, numpy):
             / num_pixels[0],
         )
 
-        # use the center of the image as the reference point in the header
+        # try to use the center of the image as the reference point in the header
         mid_pixels = numpy.asarray(
             [int(0.5 * (num_pixels[1] - 1)), int(0.5 * (num_pixels[0] - 1))]
         )
-        # convert to pixels in the original image, assuming 10 pixels per unit in the table
-        orig_pixels = mid_pixels * 10 + numpy.asarray(
-            [table["x (px)"].min(), table["y (px)"].min()]
-        )
-        mask = (table["x (px)"] == orig_pixels[0]) * (table["y (px)"] == orig_pixels[1])
+
+        def find_ind_nearest(array, value):
+            ind = (numpy.abs(array - value)).argmin()
+            return array[ind]
+        print("[create fits image] Center of image is at", mid_pixels)
+        # look for the closest pixel to the center of the image
+        inds_x = find_ind_nearest(table["reconv x (px)"], mid_pixels[0])
+        inds_y = find_ind_nearest(table["reconv y (px)"][table["reconv x (px)"] == inds_x], mid_pixels[1])
+        mid_pixels = numpy.asarray([inds_x, inds_y])
+        print("[create fits image] Center of image is at", mid_pixels)
+
+        mask = (table["reconv x (px)"] == mid_pixels[0]) * (table["reconv y (px)"] == mid_pixels[1])
+        print(numpy.sum(mask))
+        print(numpy.sum((table["reconv x (px)"] == mid_pixels[0])))
+        print(numpy.sum((table["reconv y (px)"] == mid_pixels[1])))
         coords_ref = (table["ra (deg)"][mask][0], table["dec (deg)"][mask][0])
 
-        print("Reference coordinates: ", coords_ref)
+        print("[create fits image] Reference coordinates: ", coords_ref)
 
         # create the WCS and header -- using the (0,0) pixel as the reference with max(RA) and min(DEC)
         hdr = fits.Header()
@@ -351,7 +346,6 @@ def _(Table, fits, numpy):
         hdul = fits.HDUList([primary_hdu])
         hdul.writeto(fname, overwrite=True)
         print("Saved {:s}".format(fname))
-
     return (create_fits_image,)
 
 
@@ -360,7 +354,7 @@ def _():
     import marimo as mo
 
     # Import modules
-    import numpy, os, time, copy, glob
+    import numpy, os, time, copy, glob, scipy
     import matplotlib.pyplot as plt
     import matplotlib as mpl
 
@@ -374,7 +368,7 @@ def _():
     mpl.rcParams["text.usetex"] = False
     mpl.rcParams["font.size"] = 18.0
     mpl.rcParams["legend.fontsize"] = 16.0
-    return SkyCoord, Table, ascii, fits, mo, numpy, os, plt, u, wcs
+    return SkyCoord, Table, ascii, fits, mo, numpy, os, plt, scipy, u, wcs
 
 
 if __name__ == "__main__":

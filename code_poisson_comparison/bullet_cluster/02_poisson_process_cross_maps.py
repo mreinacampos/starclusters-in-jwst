@@ -1,13 +1,12 @@
 import marimo
 
-__generated_with = "0.17.7"
+__generated_with = "0.18.0"
 app = marimo.App(width="full")
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Model testing: Cross-maps comparisons
 
     In order to tests the models used, we need to calculate the expected distribution of probability in the ideal case: "For a given model, what if all GCs were observed?"
@@ -16,18 +15,15 @@ def _(mo):
     We can also change the number of data points that we spawn, to test the convergence of the results.
 
     We can also use this technique to do cross-model validation: e.g. spawn from the noisy/uniform map and compare to any of the convergence maps.
-    """
-    )
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Decide the type of analysis
-    """
-    )
+    """)
     return
 
 
@@ -36,7 +32,7 @@ def _(os):
     # decide whether to render all the figures or not
     do_figures = True
     # decide how many iteration we'll do
-    number_iterations = 500  # 200 #500
+    number_iterations = 100  # 200 #500
     # decide whether to be verbose
     do_verbose = False
 
@@ -46,16 +42,14 @@ def _(os):
         os.makedirs(out_path)
 
     # determine the samples of GCs
-    do_bright_gcs = True
+    do_bright_gcs = False
     do_bright_blue_gcs = True
     do_bright_red_gcs = True
     do_high_quality_gcs = True
 
     ls_gcs_populations = []
     ls_gcs_labels = []
-    if do_bright_gcs:
-        ls_gcs_populations.append("Bright GCs")
-        ls_gcs_labels.append("F150W$ < 29.5$")
+
     if do_bright_blue_gcs:
         ls_gcs_populations.append("Bright Blue GCs")
         ls_gcs_labels.append("F150W<29.5\n(F115W-F200W)$_0 < 0$")
@@ -65,6 +59,9 @@ def _(os):
     if do_high_quality_gcs:
         ls_gcs_populations.append("High-quality GCs")
         ls_gcs_labels.append("F150W<29.5\nZone 1 and 2")
+    if do_bright_gcs:
+        ls_gcs_populations.append("Bright GCs")
+        ls_gcs_labels.append("F150W$ < 29.5$")
 
     for key in ls_gcs_populations:
         path = os.path.join(out_path, "imgs_" + key.replace(" ", "_"))
@@ -95,11 +92,11 @@ def _(os):
         "lensing map",
     ]
 
-    # ls_lambda_map = ["uniform", "X-ray"]
-    # ls_lambda_type = ["uniform map", "xray map"]
+    #ls_lambda_map = ["uniform"]
+    #ls_lambda_type = ["uniform map"]
 
-    # ls_lambda_map = ["X-ray"]
-    # ls_lambda_type = ["xray map"]
+    #ls_lambda_map = ["X-ray"]
+    #ls_lambda_type = ["xray map"]
     return (
         do_figures,
         do_verbose,
@@ -124,13 +121,11 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Define the properties of the galaxy cluster
 
     Needed to re-scale the images from pixels to coordinates
-    """
-    )
+    """)
     return
 
 
@@ -155,11 +150,9 @@ def _(GalaxyCluster, u):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Main program
-    """
-    )
+    """)
     return
 
 
@@ -195,14 +188,14 @@ def _(
         number_gcs = len(bright_gcs.f150w)
 
         for do_lambda_map2, type_map2 in zip(
-            ls_lambda_map, ls_lambda_type
+          ls_lambda_map, ls_lambda_type
         ):  # map against to compare
             for do_lambda_map1, type_map1 in zip(
                 ls_lambda_map, ls_lambda_type
             ):  # map to spawn from
                 # skip the cases where the maps are not the same for Blue/Red GCs
                 if (
-                    "Blue" in gcs_name or "Red" in gcs_name
+                    "Blue" in gcs_name or "Red" in gcs_name or "High-quality" in gcs_name
                 ) and do_lambda_map1 != do_lambda_map2:
                     continue
 
@@ -271,14 +264,6 @@ def _(
                 map_prob_recovery.header = rebin_sky_noise_hdr_map1
                 # map to spawn datapoints from: a combination of LambdaMap1 and the pseudo-probability of recovery
                 wgt_img = lambda_map1.img * map_prob_recovery.img
-
-                # rebin the map of the local sky noise into the resolution of lambda map 2
-                # - used to calculate the normalization factor
-                (
-                    rebin_sky_noise_img_map2,
-                    rebin_sky_noise_wcs_map2,
-                    rebin_sky_noise_hdr_map2,
-                ) = mfc.reduce_and_rebin_image(lambda_map2, map_sky_noise)
 
                 if do_figures:
                     _fig = plt.figure(figsize=(20, 8.5))
@@ -424,64 +409,6 @@ def _(
                     _fig.savefig(_fname, bbox_inches="tight")
                     plt.close()
 
-                if do_figures:
-                    _fig = plt.figure(figsize=(16, 8.5))
-                    _axs = []
-                    _ax = plt.subplot(121)
-                    _cb = _ax.imshow(
-                        lambda_map1.img.value.T,
-                        origin="lower",
-                        cmap="viridis",
-                        norm=mpl.colors.LogNorm(
-                            vmin=lambda_map1.img.value.max() / 1e5,
-                            vmax=lambda_map1.img.value.max(),
-                        ),
-                    )
-                    _ax.set_title("Lambda map 1 - {:s}".format(type_map1))
-                    # cax = _fig.add_axes([0.15, 0.15, 0.7, 0.02])
-                    _cbar = _fig.colorbar(_cb, ax=_ax, orientation="horizontal")
-                    _axs.append(_ax)
-                    _ax = plt.subplot(122)
-                    _cb = _ax.imshow(
-                        map_prob_recovery.img.T,
-                        origin="lower",
-                        cmap="viridis",
-                        norm=mpl.colors.LogNorm(
-                            vmin=map_prob_recovery.img.max() / 1e5,
-                            vmax=map_prob_recovery.img.max(),
-                        ),
-                    )
-                    _cbar = _fig.colorbar(_cb, ax=_ax, orientation="horizontal")
-                    _ax.set_title("Probability of recovery map")
-                    _axs.append(_ax)
-
-                    for _i, _ax, _wcs, _hdr in zip(
-                        range(10),
-                        _axs,
-                        [lambda_map1.wcs, lambda_map1.wcs],
-                        [lambda_map1.header, lambda_map1.header],
-                    ):
-                        _ax.scatter(
-                            _hdr["CRPIX1"],
-                            _hdr["CRPIX2"],
-                            c="red",
-                            s=50,
-                            marker="o",
-                            edgecolor="k",
-                            linewidth=0.1,
-                            zorder=10,
-                            alpha=0.9,
-                        )
-                        _ax.set_aspect("equal")
-
-                    _fname = os.path.join(
-                        out_path,
-                        f"imgs_{gcs_name}",
-                        f"fig_wgt_img_{do_lambda_map1}_pixels.png",
-                    ).replace(" ", "_")
-                    _fig.savefig(_fname, bbox_inches="tight")
-                    plt.close()
-
                 # spawn data points from the lambda map
                 start = time.time()
                 gnr_inds = mfc.spawn_datapoints_from_image(
@@ -566,22 +493,11 @@ def _(
                             do_lambda_map2,
                         )
 
-                    if do_figures and sample == 0:
-                        normalization = mfc.calculate_normalization_poisson_probability(
-                            f150w_min=bright_gcs.f150w.min(),
-                            f150w_max=bright_gcs.f150w.max(),
-                            map_sky_noise=rebin_sky_noise_img_map2,
-                            gcs=bright_gcs,
-                            lambda_map=lambda_map2,
-                        )
-                        print(
-                            f"[main] Normalization factor for {do_lambda_map2} is {normalization:.4e}"
-                        )
 
                     start = time.time()
                     ### Calculate the Poisson probability of observing the GCs given the lambda map and the selection function
                     ln_prob = mfc.calculate_continuous_spatial_poisson_probability(
-                        normalization, lambda_map2, datapoints, do_verbose=do_verbose
+                        lambda_map2, datapoints, do_verbose=do_verbose
                     )
                     ls_results.append(ln_prob)
                     if do_verbose:
@@ -592,12 +508,14 @@ def _(
                         print(
                             f"Sample {sample} done - ln_prob = {ln_prob} - time elapsed = {time.time() - start_time:.2f} s"
                         )
-                    dict_results[
-                        "{:s}-{:s}".format(do_lambda_map1, do_lambda_map2)
-                    ] = ls_results
 
                     # delete the variables to save memory
                     del coords, datapoints, inds, ln_prob
+
+                # store the log likelihoods 
+                dict_results[
+                    "{:s}-{:s}".format(do_lambda_map1, do_lambda_map2)
+                ] = ls_results
 
                 print(f"Cross-testing of {do_lambda_map1}-{do_lambda_map2} is done")
 
@@ -613,7 +531,7 @@ def _(
                 print("Table saved to {:s}".format(tname))
 
                 # delete the variables to save memory
-                del gnr_inds, gnr_f150w, ls_results, dict_results, table
+                del gnr_inds, gnr_f150w, ls_results,dict_results, table
 
             del lambda_map1, lambda_map2
         # delete the variables to save memory
@@ -623,11 +541,9 @@ def _(
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Modules
-    """
-    )
+    """)
     return
 
 
@@ -653,7 +569,7 @@ def _():
     import master_validation_figures as mvf
     import master_functions_discrete as mfd
     import master_functions_continuous as mfc
-    import code_poisson_comparison.bullet_cluster.master_functions_bullet_cluster as mfgc
+    import master_functions_abell2744 as mfgc
     import master_validation_figures as mvf
     import master_functions_continuous as mfc
 
@@ -678,22 +594,4 @@ def _():
 
 
 if __name__ == "__main__":
-    import multiprocessing
-
-    # prefer 'fork' on mac to avoid extra spawn semaphores (careful with threads/GUI)
-    try:
-        multiprocessing.set_start_method("fork", force=True)
-    except Exception:
-        # already set or not allowed; continue
-        pass
-
-    try:
-        app.run()
-    finally:
-        # Best-effort cleanup of leftover child processes (terminates and joins)
-        for p in multiprocessing.active_children():
-            try:
-                p.terminate()
-                p.join(timeout=2)
-            except Exception:
-                pass
+    app.run()
