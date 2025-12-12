@@ -443,5 +443,5 @@ layout: home
 | Galaxy Cluster | Redshift | Status | Details | 
 |---------------|----------|---------|---------|
 {% for galaxy_cluster in sorted_clusters -%}
-| {{ galaxy_cluster.name }} | {% if galaxy_cluster.redshift and galaxy_cluster.redshift != "" and galaxy_cluster.redshift != "---" %}{{ galaxy_cluster.redshift }}{% else %}N/A{% endif %} | {{ galaxy_cluster.status }}|[View Details]({{ galaxy_cluster.url_zenodo }}) | 
+| {{ galaxy_cluster.name }} | {% if galaxy_cluster.redshift and galaxy_cluster.redshift != "" and galaxy_cluster.redshift != "---" %}{{ galaxy_cluster.redshift }}{% else %}N/A{% endif %} | {{ galaxy_cluster.status }}|[Zenodo]({{ galaxy_cluster.url_zenodo }}) | 
 {% endfor %}

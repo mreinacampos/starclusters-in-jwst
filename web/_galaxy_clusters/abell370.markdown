@@ -1,7 +1,7 @@
 ---
 name: "Abell 370"
 redshift: 0.375
-status: "in progress"
+status: "---"
 layout: page
 url_zenodo: "---"
 corresponding_author: Bill Harris
