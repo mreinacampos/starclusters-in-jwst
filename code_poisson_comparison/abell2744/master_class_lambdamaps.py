@@ -73,8 +73,24 @@ class LensingMap(LambdaMap):
         elif "noisy".lower() in kind:
             num_pixels = (600, 600)
             sigma_kpc = (20 * u.kpc, 20 * u.kpc)
+            # draw from a uniform distribution the number of subhaloes
+            number_of_subhaloes = int(numpy.floor(numpy.random.uniform(10, 50)))
             self.img = self.create_noisy_distribution(
-                num_pixels, sigma_kpc, kwargs["gcs"], kwargs["galaxy_cluster"]
+                num_pixels, sigma_kpc, kwargs["gcs"], kwargs["galaxy_cluster"], number_of_subhaloes=number_of_subhaloes, do_random = True
+            )
+            self.wcs, self.header = kwargs["gcs"].create_wcs_and_header(self.img)
+        elif "compact".lower() in kind:
+            num_pixels = (600, 600)
+            sigma_kpc = (20 * u.kpc, 20 * u.kpc)
+            self.img = self.create_noisy_distribution(
+                num_pixels, sigma_kpc, kwargs["gcs"], kwargs["galaxy_cluster"], number_of_subhaloes = 1, do_random=False
+            )
+            self.wcs, self.header = kwargs["gcs"].create_wcs_and_header(self.img)
+        elif "extended".lower() in kind:
+            num_pixels = (600, 600)
+            sigma_kpc = (200 * u.kpc, 200 * u.kpc)
+            self.img = self.create_noisy_distribution(
+                num_pixels, sigma_kpc, kwargs["gcs"], kwargs["galaxy_cluster"], number_of_subhaloes = 1, do_random=False
             )
             self.wcs, self.header = kwargs["gcs"].create_wcs_and_header(self.img)
         else:
@@ -104,6 +120,8 @@ class LensingMap(LambdaMap):
         sigma: tuple[u.kpc, u.kpc],
         gcs: GCs,
         galaxy_cluster: GalaxyCluster,
+        number_of_subhaloes: int = None,
+        do_random : bool = True,
     ) -> numpy.ndarray:
         """Return a noisy distributio made of a random number of 2D gaussians randomly placed throughout the image of a given size.
         :type num_pix: tuple with the number of pixels in the (x, y)-axes
@@ -134,11 +152,9 @@ class LensingMap(LambdaMap):
         )
         sigma_pixels = (sigma[0] / pixel_to_kpc[0], sigma[1] / pixel_to_kpc[1])
 
-        # draw from a uniform distribution the number of subhaloes
-        number_subhaloes = int(numpy.floor(numpy.random.uniform(10, 50)))
         print(
             "[create_noisy_distribution] Creating a noisy map with {:d} subhaloes of size ({:.2f}, {:.2f}) or ({:.2f}, {:.2f}) pixels".format(
-                number_subhaloes, *sigma, *sigma_pixels
+                number_of_subhaloes, *sigma, *sigma_pixels
             )
         )
         print(
@@ -147,22 +163,26 @@ class LensingMap(LambdaMap):
             )
         )
         # draw from uniform distributions to determine the coordinates of the subhaloes
-        coords_subhaloes = numpy.array(
-            [
-                [x, y]
-                for x, y in zip(
-                    numpy.random.uniform(0, num_pix[0], number_subhaloes),
-                    numpy.random.uniform(0, num_pix[1], number_subhaloes),
-                )
-            ]
-        )
+        if do_random:
+            coords_subhaloes = numpy.array(
+                [
+                    [x, y]
+                    for x, y in zip(
+                        numpy.random.uniform(0, num_pix[0], number_of_subhaloes),
+                        numpy.random.uniform(0, num_pix[1], number_of_subhaloes),
+                    )
+                ]
+            )
+        else: # place it in the center of the image
+            coords_subhaloes = numpy.array([[num_pix[0]//2, num_pix[1]//2]])
+            
         xx, yy = numpy.meshgrid(
             numpy.arange(0, num_pix[0]), numpy.arange(0, num_pix[1]), indexing="ij"
         )
         # create the map of uniform density first
         img = numpy.ones(shape=(num_pix[0], num_pix[1])) * 1e-10
         # add the 2D Gaussians for the subhaloes
-        for ind in range(number_subhaloes):
+        for ind in range(number_of_subhaloes):
             img += gaussian_2d(
                 xx,
                 yy,

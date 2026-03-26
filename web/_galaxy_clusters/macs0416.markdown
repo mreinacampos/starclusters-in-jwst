@@ -5,5 +5,5 @@ status: "---"
 layout: page
 url_zenodo: "---"
 corresponding_author: Jessica Berkheimer
-references: 
+references: https://scixplorer.org/abs/2026AJ....171...48B/abstract
 ---

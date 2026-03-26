@@ -13,6 +13,7 @@ The catalogues of GCs listed in this website are a team effort across several JW
 * Kaitlyn Keatley (McMaster University)
 * Jinoo Kim (McMaster University)
 * Nick Martis (University of Ljubljana)
+* Marta Reina-Campos (Universidade de Santiago de Compostela)
 * Marcin Sawicki (Saint Mary's University)
 * Rogier Windhorst (Arizona State University)
 

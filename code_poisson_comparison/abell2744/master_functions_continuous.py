@@ -26,14 +26,14 @@ def create_instance_lambda_map(
     :param gcs: GCs -- instance of the GCs class
     :param galaxy_cluster: GalaxyCluster -- instance of the GalaxyCluster class
     """
-    if type_map in ["lensing map", "uniform map", "noisy map"]:
-        if "noisy" in type_map or "uniform" in type_map:
+    if type_map in ["lensing map", "uniform map", "noisy map", "compact map", "extended map"]:
+        if "noisy" in type_map or "uniform" in type_map or "compact" in type_map or "extended" in type_map:
             lambda_map = LensingMap(
                 do_lambda_map, type_map, gcs=gcs, galaxy_cluster=galaxy_cluster
             )
         else:
             lambda_map = LensingMap(do_lambda_map, type_map)
-    elif type_map in ["stellar light", "bcgless map"]:
+    elif type_map in ["stellar light", "bcgless map", "segmap", "models light"]:
         lambda_map = StellarLightMap(do_lambda_map, type_map)
     elif type_map in ["xray map"]:
         lambda_map = XrayMap(do_lambda_map, type_map)

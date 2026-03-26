@@ -1,7 +1,7 @@
 ---
 name: "SMACS0723"
 redshift: 0.39
-status: "Available"
+status: "in progress"
 layout: page
 url_zenodo: "---"
 corresponding_author: Nick Martis

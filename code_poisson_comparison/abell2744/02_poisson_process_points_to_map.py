@@ -1,13 +1,12 @@
 import marimo
 
-__generated_with = "0.18.0"
+__generated_with = "0.18.4"
 app = marimo.App(width="full")
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Point-to-map comparisons via an inhomogeneous Poisson point process
 
     Notebook to calculate the log-likelihood of a given GC population to have been spawned from a continuous map/image assuming an inhomogenous Poisson point process
@@ -29,18 +28,15 @@ def _(mo):
 
     Outputs:
     * Log-likelihood values for each GC population and each lambda map
-    """
-    )
+    """)
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Decide the type of analysis
-    """
-    )
+    """)
     return
 
 
@@ -78,6 +74,7 @@ def _(os):
 
     # determine the lambda maps (predictor maps) to compare against
     ls_lambda_map = [
+        "Models",
         "uniform",
         "noisy",
         "Cha24_SL_WL",
@@ -85,10 +82,11 @@ def _(os):
         "X-ray",
         "Original",
         "BCGless",
-        "Price24",
-        "Bergamini23",
+        "Price25",
+        "Bergamini23"
     ]
     ls_lambda_type = [
+        "models light",
         "uniform map",
         "noisy map",
         "lensing map",
@@ -97,11 +95,11 @@ def _(os):
         "stellar light",
         "bcgless map",
         "lensing map",
-        "lensing map",
+        "lensing map"
     ]
 
-    # ls_lambda_map = ["uniform", "X-ray"]
-    # ls_lambda_type = ["uniform map", "xray map"]
+    #ls_lambda_map = ["Models"]#, "extended"]
+    #ls_lambda_type = ["models light"]#, "extended map"]
     return (
         do_figures,
         do_verbose,
@@ -115,11 +113,9 @@ def _(os):
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Define properties of the galaxy cluster
-    """
-    )
+    """)
     return
 
 
@@ -144,11 +140,9 @@ def _(GalaxyCluster, u):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Main program
-    """
-    )
+    """)
     return
 
 
@@ -266,21 +260,17 @@ def _(
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Functions
-    """
-    )
+    """)
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Modules
-    """
-    )
+    """)
     return
 
 
@@ -299,7 +289,6 @@ def _():
     import master_functions_discrete as mfd
     import master_functions_continuous as mfc
     import master_functions_abell2744 as mfgc
-
     return FitsMap, GCs, GalaxyCluster, Table, mfc, mo, mvf, os, time, u
 
 

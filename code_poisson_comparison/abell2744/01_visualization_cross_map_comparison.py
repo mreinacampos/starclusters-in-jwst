@@ -1,28 +1,24 @@
 import marimo
 
-__generated_with = "0.18.1"
+__generated_with = "0.18.4"
 app = marimo.App(width="full")
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Visualization of the cross-maps comparisons
 
     Using the sample of Bright GCs and the Price24 lambda map
-    """
-    )
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Decide the type of analysis
-    """
-    )
+    """)
     return
 
 
@@ -57,7 +53,6 @@ def _(os):
     ls_lambda_type = [
         "lensing map",
     ]
-
     return (
         do_figures,
         do_verbose,
@@ -82,13 +77,11 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Define the properties of the galaxy cluster
 
     Needed to re-scale the images from pixels to coordinates
-    """
-    )
+    """)
     return
 
 
@@ -113,11 +106,9 @@ def _(GalaxyCluster, u):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Main program
-    """
-    )
+    """)
     return
 
 
@@ -128,6 +119,7 @@ def _(
     abell2744,
     do_figures,
     do_verbose,
+    figure_effective_lambda_map,
     figure_sampled_points_lambda_maps,
     ls_gcs_labels,
     ls_gcs_populations,
@@ -226,8 +218,8 @@ def _(
                 # map to spawn datapoints from: a combination of LambdaMap1 and the pseudo-probability of recovery
                 wgt_img = lambda_map1.img * map_prob_recovery.img
 
-                # if do_figures:
-                #  figure_effective_lambda_map(lambda_map1, map_prob_recovery, wgt_img, out_path, gcs_name, do_lambda_map1)
+                if do_figures:
+                    figure_effective_lambda_map(lambda_map1, map_prob_recovery, wgt_img, out_path, gcs_name, do_lambda_map1)
 
                 # spawn data points from the lambda map
                 start = time.time()
@@ -301,40 +293,40 @@ def _(mpl, numpy, os, plt):
     def figure_effective_lambda_map(
         lambda_map, map_prob_recovery, wgt_img, out_path, gcs_name, do_lambda_map
     ):
-        _fig = plt.figure(figsize=(12, 18.5))
+        _fig = plt.figure(figsize=(20, 5.5))
         _axs = []
-        _ax = plt.subplot(311, projection=lambda_map.wcs)
+        _ax = plt.subplot(131, projection=lambda_map.wcs)
         _cb = _ax.imshow(
             lambda_map.img.value.T,
             origin="lower",
-            cmap="viridis",
+            cmap="inferno",
             norm=mpl.colors.LogNorm(
                 vmin=1e-4,
                 vmax=10,
             ),
         )
-        _ax.set_title("Lambda map 1 - {:s}".format(lambda_map.name))
+        #_ax.set_title("Lambda map 1 - {:s}".format(lambda_map.name))
         _axs.append(_ax)
-        _ax = plt.subplot(312, projection=map_prob_recovery.wcs)
+        _ax = plt.subplot(132, projection=map_prob_recovery.wcs)
         _cb = _ax.imshow(
             map_prob_recovery.img.value.T,
             origin="lower",
-            cmap="viridis",
+            cmap="inferno",
             norm=mpl.colors.Normalize(vmin=0, vmax=1),
         )
-        _ax.set_title("Probability of recovery map")
+        #_ax.set_title("Probability of recovery map")
         _axs.append(_ax)
-        _ax = plt.subplot(313, projection=lambda_map.wcs)
+        _ax = plt.subplot(133, projection=lambda_map.wcs)
         _cb = _ax.imshow(
             wgt_img.value.T,
             origin="lower",
-            cmap="viridis",
+            cmap="inferno",
             norm=mpl.colors.LogNorm(
                 vmin=1e-4,
                 vmax=10,
             ),
         )
-        _ax.set_title(r"$\lambda_{\rm eff} = \lambda_1 * S$")
+        #_ax.set_title(r"$\lambda_{\rm eff} = \lambda_1 * S$")
         _axs.append(_ax)
 
         _xlim_ra = numpy.asarray(
@@ -369,30 +361,31 @@ def _(mpl, numpy, os, plt):
 
             ra = _ax.coords[0]
             dec = _ax.coords[1]
-            if _i == 0:
-                dec.set_axislabel("Declination (J2000)")
-            else:
-                dec.set_ticks_visible(False)
-                dec.set_ticklabel_visible(False)
-                dec.set_axislabel("")
-            ra.set_axislabel("Right Ascension (J2000)")
-            for obj in [ra, dec]:
-                # set the formatting of the axes
-                obj.set_major_formatter("dd:mm:ss")
-                # display minor ticks
-                obj.display_minor_ticks(True)
-                obj.set_minor_frequency(10)
-            # set the aspect ratio to be equal
+            dec.set_axislabel("")
+            ra.set_axislabel("")
+            dec.set_ticklabel_visible(False)
+            ra.set_ticklabel_visible(False)
+            ra.display_minor_ticks(True)
+            dec.display_minor_ticks(True)
+            ra.set_minor_frequency(6)
+            dec.set_minor_frequency(12)
+            ra.tick_params(
+                which="major", direction="in", top=True, bottom=True, length=10, width=1
+            )
+            dec.tick_params(
+                which="major", direction="in", right=True, left=True, length=10, width=1
+            )
+            ra.tick_params(which="minor", length=5)
+            dec.tick_params(which="minor", length=5)
             _ax.set_aspect("equal")
 
         _fname = os.path.join(
             out_path,
-            f"fig_wgt_img_{do_lambda_map}.png",
+            f"fig_wgt_img_{do_lambda_map}.pdf",
         ).replace(" ", "_")
         _fig.savefig(_fname, bbox_inches="tight")
         plt.close()
-
-    return
+    return (figure_effective_lambda_map,)
 
 
 @app.cell
@@ -450,7 +443,7 @@ def _(mpl, numpy, os, plt):
             cmap="inferno",
             transform=_ax.get_transform(lambda_map2.wcs),
             zorder=0,
-            norm=mpl.colors.LogNorm(vmin=img.max() / 1e5, vmax=img.max()),
+            norm=mpl.colors.LogNorm(vmin=1e-4, vmax=10),
         )
         _ax.set_title(r"$\lambda_{2} (x,y)$")
         _axs.append(_ax)
@@ -498,17 +491,14 @@ def _(mpl, numpy, os, plt):
         ).replace(" ", "_")
         fig.savefig(fname, bbox_inches="tight")
         plt.close()
-
     return (figure_sampled_points_lambda_maps,)
 
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Modules
-    """
-    )
+    """)
     return
 
 

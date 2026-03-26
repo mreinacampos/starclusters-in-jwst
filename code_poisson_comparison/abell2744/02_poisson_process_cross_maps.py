@@ -1,13 +1,12 @@
 import marimo
 
-__generated_with = "0.18.0"
+__generated_with = "0.18.4"
 app = marimo.App(width="full")
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Model testing: Cross-maps comparisons
 
     In order to tests the models used, we need to calculate the expected distribution of probability in the ideal case: "For a given model, what if all GCs were observed?"
@@ -16,18 +15,15 @@ def _(mo):
     We can also change the number of data points that we spawn, to test the convergence of the results.
 
     We can also use this technique to do cross-model validation: e.g. spawn from the noisy/uniform map and compare to any of the convergence maps.
-    """
-    )
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Decide the type of analysis
-    """
-    )
+    """)
     return
 
 
@@ -36,7 +32,7 @@ def _(os):
     # decide whether to render all the figures or not
     do_figures = True
     # decide how many iteration we'll do
-    number_iterations = 100  # 200 #500
+    number_iterations = 100  # 200#500
     # decide whether to be verbose
     do_verbose = False
 
@@ -48,8 +44,8 @@ def _(os):
     # determine the samples of GCs
     do_bright_gcs = False
     do_bright_blue_gcs = True
-    do_bright_red_gcs = True
-    do_high_quality_gcs = True
+    do_bright_red_gcs = False
+    do_high_quality_gcs = False
 
     ls_gcs_populations = []
     ls_gcs_labels = []
@@ -74,33 +70,35 @@ def _(os):
 
     # determine the lambda maps (predictor maps) to compare against
     ls_lambda_map = [
+        "Models",
         "uniform",
         "noisy",
         "Cha24_SL_WL",
         "Cha24_WL",
         "X-ray",
         "Original",
-        "BCGless",
-        "Price24",
-        "Bergamini23",
+        #"BCGless",
+        "Price25",
+        "Bergamini23"
     ]
     ls_lambda_type = [
+        "models light",
         "uniform map",
         "noisy map",
         "lensing map",
         "lensing map",
         "xray map",
         "stellar light",
-        "bcgless map",
+        #"bcgless map",
         "lensing map",
-        "lensing map",
+        "lensing map"
     ]
 
     # ls_lambda_map = ["uniform"]
     # ls_lambda_type = ["uniform map"]
 
-    # ls_lambda_map = ["X-ray"]
-    # ls_lambda_type = ["xray map"]
+    #ls_lambda_map = ["compact", "extended"]
+    #ls_lambda_type = ["compact map", "extended map"]
     return (
         do_figures,
         do_verbose,
@@ -113,25 +111,13 @@ def _(os):
     )
 
 
-@app.cell
-def _(mo):
-    _df = mo.sql(
-        f"""
-
-        """
-    )
-    return
-
-
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Define the properties of the galaxy cluster
 
     Needed to re-scale the images from pixels to coordinates
-    """
-    )
+    """)
     return
 
 
@@ -156,11 +142,9 @@ def _(GalaxyCluster, u):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Main program
-    """
-    )
+    """)
     return
 
 
@@ -196,17 +180,21 @@ def _(
         number_gcs = len(bright_gcs.f150w)
 
         for do_lambda_map2, type_map2 in zip(
-            ls_lambda_map, ls_lambda_type
+              ls_lambda_map, ls_lambda_type     
         ):  # map against to compare
             for do_lambda_map1, type_map1 in zip(
-                ls_lambda_map, ls_lambda_type
+              ls_lambda_map, ls_lambda_type
             ):  # map to spawn from
                 # skip the cases where the maps are not the same for Blue/Red GCs
                 if (
-                    "Blue" in gcs_name
-                    or "Red" in gcs_name
+                    #"Blue" in gcs_name
+                    "Red" in gcs_name
                     or "High-quality" in gcs_name
                 ) and do_lambda_map1 != do_lambda_map2:
+                    continue
+
+                # skip the cases where one of the maps is not "Models"
+                if "Models" not in [do_lambda_map1, do_lambda_map2]:
                     continue
 
                 # prepare a dictionary to store the results
@@ -541,8 +529,7 @@ def _(
 
                 # delete the variables to save memory
                 del gnr_inds, gnr_f150w, ls_results, dict_results, table
-
-            del lambda_map1, lambda_map2
+                del lambda_map1, lambda_map2
         # delete the variables to save memory
         del bright_gcs
     return
@@ -550,11 +537,9 @@ def _(
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Modules
-    """
-    )
+    """)
     return
 
 

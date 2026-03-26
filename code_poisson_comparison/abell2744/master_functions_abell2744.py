@@ -183,12 +183,12 @@ class LambdaMapLoaders:
                 "LensingMap_Cha24",
                 "A2744_convergence_map_SL_WL.fits",
             )
-        elif name == "Price24":
+        elif name == "Price25":
             fname = glob.glob(
                 os.path.join(
                     ".",
                     "data",
-                    "LensingMap_Price24",
+                    "LensingMap_Price25",
                     "Best-model_low-resolution_100mas",
                     "*_kappa.fits",
                 )
@@ -215,7 +215,7 @@ class LambdaMapLoaders:
         """
 
         # determine the critical surface density
-        if self.name in ["Furtak23", "Price24", "Bergamini23"]:
+        if self.name in ["Furtak23", "Price25", "Bergamini23"]:
             sigma_cr = (constants.c.to("kpc/s") ** 2) / (
                 4
                 * numpy.pi
@@ -229,10 +229,10 @@ class LambdaMapLoaders:
                 1.777e9 * u.solMass / u.kpc**2
             )  # solar mass per square kpc - critical surface density
         # convert to projected mass surface density
-        self.img_mass = self.img * sigma_cr  # units: MSun / kpc^2
+        self.img *= sigma_cr  # units: MSun / kpc^2
 
     def load_stellar_light_map(self, kind: str):
-        if "light" in kind:
+        if "stellar" in kind:
             fname = os.path.join(
                 ".",
                 "data",
@@ -245,6 +245,20 @@ class LambdaMapLoaders:
                 "data",
                 "StellarLight_UNCOVER_CombinedMosaics",
                 "uncover_abell2744clu_avg_bkg_sci_reduced_rebinned.fits",
+            )
+        elif "segmap" in kind:
+            fname = os.path.join(
+                ".",
+                "data",
+                "StellarLight_UNCOVER_CombinedMosaics",
+                "uncover_abell2744clu_avg_bkg_sci_reduced_rebinned_segmask.fits",
+            )
+        elif "models" in kind:
+            fname = os.path.join(
+                ".",
+                "data",
+                "StellarLight_UNCOVER_CombinedMosaics",
+                "uncover_abell2744clu_avg_bcgs_models_reduced_rebinned.fits",
             )
         else:
             raise ValueError(f"Unknown stellar-light kind: {kind}")

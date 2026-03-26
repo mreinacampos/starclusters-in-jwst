@@ -6,21 +6,17 @@ app = marimo.App(width="full")
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     # Pixel-by-pixel correlation between two maps
-    """
-    )
+    """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Define properties of the galaxy cluster
-    """
-    )
+    """)
     return
 
 
@@ -45,21 +41,17 @@ def _(GalaxyCluster, u):
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Load the GC catalogue
-    """
-    )
+    """)
     return
 
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Decide the type of analysis
-    """
-    )
+    """)
     return
 
 
@@ -67,9 +59,9 @@ def _(mo):
 def _():
     # determine the samples of GCs
     do_bright_gcs = True
-    do_bright_blue_gcs = True
-    do_bright_red_gcs = True
-    do_high_quality_gcs = True
+    do_bright_blue_gcs = False
+    do_bright_red_gcs = False
+    do_high_quality_gcs = False
 
     # decide if you want to smooth the lambda map by the same kernel as the GCs
     do_smooth_lambda_map = False
@@ -95,12 +87,13 @@ def _():
     # determine the lambda maps (predictor maps) to compare against
     ls_lambda_map = [
         "Bergamini23",
-        "Price24",
+        "Price25",
         "Cha24_WL",
         "Cha24_SL_WL",
         "Original",
         "BCGless",
-        "X-ray",
+        "Models",
+        "X-ray"
     ]
     ls_lambda_type = [
         "lensing map",
@@ -109,9 +102,12 @@ def _():
         "lensing map",
         "stellar light",
         "bcgless map",
-        "xray map",
+        "models light",
+        "xray map"
     ]
 
+    #ls_lambda_map=["uniform"]
+    #ls_lambda_type=["uniform map"]
     return (
         do_figures,
         do_smooth_lambda_map,
@@ -124,11 +120,9 @@ def _():
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Main program
-    """
-    )
+    """)
     return
 
 
@@ -155,12 +149,15 @@ def _(
     sigma_kpc = 20 * u.kpc
     sigma_arcsec = sigma_kpc / abell2744.arcsec_to_kpc
 
+    if do_smooth_lambda_map: extra = "_smoothed_lambda_map"
+    else: extra = ""
+
     # create the output path
     out_path = os.path.join(
         ".",
         "imgs",
         "pixel_by_pixel",
-        f"smoothed_{sigma_kpc.to_string()}".replace(" ", "").replace(".", "p"),
+        f"smoothed_{sigma_kpc.to_string()}{extra}".replace(" ", "").replace(".", "p"),
     )
     if not os.path.exists(out_path):
         os.makedirs(out_path)
@@ -170,15 +167,19 @@ def _(
     print("\n ### Starting the analysis ...")
 
     for _gcs_name, gcs_label in zip(ls_gcs_populations, ls_gcs_labels):
-        _fig, axs = plt.subplots(2, 4, figsize=(20, 10), sharex=True)
-        axs = axs.ravel()
+        _fig, _axs = plt.subplots(2, 4, figsize=(20, 10), sharex=True)
+        _axs = _axs.ravel()
+
+        _fig2, _axs2 = plt.subplots(2, 2, figsize=(11, 10), sharex=True)
+        _axs2 = _axs2.ravel()
+        _j = 0
 
         dict_results[f"{_gcs_name} - $r_{{\\rm S}}$"] = []
         dict_results[f"{_gcs_name} - $p$-value"] = []
 
         # prepare the dictionary to store results
         for i, _ax, do_lambda_map, _type_map in zip(
-            range(10), axs, ls_lambda_map, ls_lambda_type
+            range(10), _axs, ls_lambda_map, ls_lambda_type
         ):
             print(f"\n *** [main] Comparing {_gcs_name} -- {do_lambda_map}")
             # create the instance of the GCs class
@@ -205,6 +206,7 @@ def _(
             # convert the convergence maps to projected mass surface densities
             if _type_map == "lensing map":
                 lambda_map.convert_to_projected_mass(abell2744)
+                print(do_lambda_map, lambda_map.img.unit.to_string())
 
             # mask GCs that are outside the edges of the lambda map
             # but add the edges to extend the GC map to cover the same FOV as the lambda map
@@ -260,19 +262,15 @@ def _(
                     out_path=out_path,
                 )
 
-            _mask = (bright_gcs.nrho_smooth_img.T.value > 5e-10) & (
-                lambda_map.img.value > 1e-10
+            _mask = (bright_gcs.nrho_smooth_img.T.value > 1e-4) & (
+                lambda_map.img.value > 1e-5
             )
             _xx = bright_gcs.nrho_smooth_img.T.value[_mask].flatten()
             _yy = lambda_map.img.value[_mask].flatten()
             # print(_xx.min(), _yy.min(), _xx.max(), _yy.max())
             # original data
-            _ax.scatter(_xx, _yy, marker=".", color="C0", alpha=0.5)
-            # calculate the correlation with a simple linear linear fit
-            # _res = stats.linregress(numpy.log10(_xx), numpy.log10(_yy))
-            # _xxpp = numpy.logspace(numpy.log10(_xx.min()), numpy.log10(_xx.max()), 100)
-            # _ax.plot(_xxpp, numpy.power(10, _res.intercept + _res.slope*numpy.log10(_xxpp)), 'r', linestyle='--', linewidth=3)
-            # _ax.annotate(f'$r^2=${_res.rvalue**2:.5f}', xy=(0.98, 0.98), ha='right', va='top', xycoords='axes fraction')
+            _ax.hexbin(_xx, _yy, gridsize=100, cmap="viridis", mincnt=1, xscale="log", yscale="log", bins = "log")
+
             # calculate the Spearman correlation coefficient
             _spearman_corr, _p_value = scipy.stats.spearmanr(_xx, _yy)
             _ax.annotate(
@@ -282,10 +280,29 @@ def _(
                 va="top",
                 xycoords="axes fraction",
             )
+            if do_lambda_map in ["Price25", "Cha24_WL", "Models", "X-ray"]:
+                _axs2[_j].hexbin(_xx, _yy, gridsize=80, cmap="viridis", mincnt=1, xscale="log", yscale="log", bins = "log")
+                _axs2[_j].annotate(
+                  f"$r_{{\\rm S}}=${_spearman_corr:.5f}",
+                  xy=(0.02, 0.98),
+                  ha="left",
+                  va="top",
+                  xycoords="axes fraction",
+                )
+                if do_lambda_map == "Price25":
+                  _axs2[_j].set_ylabel("Price25 [M$_{\\odot}$ kpc$^{-2}$]")
+                elif do_lambda_map == "Cha24_WL":
+                  _axs2[_j].set_ylabel("Cha24_WL [M$_{\\odot}$ kpc$^{-2}$]")
+                elif do_lambda_map == "Original":
+                  _axs2[_j].set_ylabel("Original [10 nJy]")
+                elif do_lambda_map == "Models":
+                  _axs2[_j].set_ylabel("Models [10 nJy]")
+                elif do_lambda_map == "X-ray":
+                  _axs2[_j].set_ylabel("X-ray emission [counts]")
+                if _j > 1:
+                  _axs2[_j].set_xlabel(r"n$_{\rm GCs}$ [arcsec$^{-2}$]")
+                _j += 1
 
-            # _ax.set_ylabel(f'{lambda_map.name} [{lambda_map.img.unit.to_string()}]')
-            # _ax.annotate(f'{lambda_map.name} [{lambda_map.img.unit.to_string()}]',
-            #             xy=(0.02, 0.02), ha='left', va='bottom', xycoords='axes fraction')
             _ax.set_ylabel(f"{lambda_map.name} [{lambda_map.img.unit.to_string()}]")
 
             # store the results for later
@@ -295,15 +312,9 @@ def _(
 
             print("[main] Finished comparison!")
 
-        for _i, _ax in enumerate(axs):
-            _ax.set_xscale("log")
-            _ax.set_yscale("log")
+        for _i, _ax in enumerate(_axs):
             if _i > 3:
                 _ax.set_xlabel(r"n$_{\rm GCs}$ [arcsec$^{-2}$]")
-            # if _i % 4 == 0:
-            #    _ax.set_ylabel("LambdaMap")
-            if _i == 7:
-                _ax.set_axis_off()
 
         _fig.subplots_adjust(
             left=0.05, top=0.95, bottom=0.1, right=0.95, hspace=0.05, wspace=0.35
@@ -315,7 +326,19 @@ def _(
             ),
             bbox_inches="tight",
         )
+
+        _fig2.subplots_adjust(
+            left=0.05, top=0.95, bottom=0.1, right=0.95, hspace=0.05, wspace=0.25
+        )
+        _fig2.savefig(
+            os.path.join(
+                out_path,
+                f"correlation_gcs_vs_lambda_maps_{_gcs_name}_selected.pdf".replace(" ", "_"),
+            ),
+            bbox_inches="tight",
+        )
         plt.close()
+
         # mo.md(f"""Here's the plot!{mo.as_html(_fig)}""")
         print()
     # save the results
@@ -500,11 +523,9 @@ def _(
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Functions
-    """
-    )
+    """)
     return
 
 
@@ -656,7 +677,6 @@ def _(LogNorm, numpy, os, plt):
         )
         fig.savefig(os.path.join(out_path, fname), bbox_inches="tight")
         plt.close()
-
     return (figure_side_by_side_number_density_gcs_lambda_map,)
 
 
@@ -667,11 +687,9 @@ def renormalize_img(img, min=0, max=1):
 
 @app.cell
 def _(mo):
-    mo.md(
-        r"""
+    mo.md(r"""
     ## Modules
-    """
-    )
+    """)
     return
 
 
@@ -681,6 +699,7 @@ def _():
     import marimo as mo
     import numpy, os, glob, scipy
     import matplotlib.pyplot as plt
+    plt.style.use('petroff10')
     import matplotlib as mpl
     from scipy import stats
     from astropy.io import fits
