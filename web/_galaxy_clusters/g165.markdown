@@ -3,7 +3,7 @@ name: "PLCK G165.7+67.0"
 redshift: 0.35
 status: "Available"
 layout: page
-url_zenodo: "---"
+url_zenodo: https://zenodo.org/records/19236476
 corresponding_author: Tyler Hinrichs
 references: https://scixplorer.org/abs/2026arXiv260314480H/abstract
 image: "assets/images/g165.png"

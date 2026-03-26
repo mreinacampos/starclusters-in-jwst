@@ -3,7 +3,7 @@ name: "MACS0417 J0417.5-1154"
 redshift: 0.443
 status: "Available"
 layout: page
-url_zenodo: "---"
+url_zenodo: https://zenodo.org/records/19236416
 corresponding_author: Bill Harris
 references: https://ui.adsabs.harvard.edu/abs/2025arXiv250803883B/abstract
 ---

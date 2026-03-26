@@ -3,7 +3,7 @@ name: "RXJ2129"
 redshift: 0.234
 status: "Available"
 layout: page
-url_zenodo: "---"
+url_zenodo: https://zenodo.org/records/19236324
 corresponding_author: Kaitlyn Keatley
 references: https://ui.adsabs.harvard.edu/abs/2025arXiv250803626K/abstract
 ---
