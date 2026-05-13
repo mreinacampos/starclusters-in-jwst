@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.18.4"
+__generated_with = "0.23.5"
 app = marimo.App(width="full")
 
 
@@ -43,9 +43,9 @@ def _(mo):
 @app.cell
 def _(os):
     # decide whether to render all the figures or not
-    do_figures = True
+    do_figures = False
     # decide whether to be verbose or not
-    do_verbose = True
+    do_verbose = False
     # create the output path for the tables
     out_path = os.path.join(".", "tables", "points_to_maps")
     if not os.path.exists(out_path):
@@ -75,8 +75,8 @@ def _(os):
     # determine the lambda maps (predictor maps) to compare against
     ls_lambda_map = [
         "Models",
-        "uniform",
-        "noisy",
+        #"uniform",
+        #"noisy",
         "Cha24_SL_WL",
         "Cha24_WL",
         "X-ray",
@@ -87,8 +87,8 @@ def _(os):
     ]
     ls_lambda_type = [
         "models light",
-        "uniform map",
-        "noisy map",
+        #"uniform map",
+        # "noisy map",
         "lensing map",
         "lensing map",
         "xray map",
@@ -98,15 +98,21 @@ def _(os):
         "lensing map"
     ]
 
+    # flag for bootstrap resampling
+    do_bootstrap = True
+    n_bootstrap = 200
+
     #ls_lambda_map = ["Models"]#, "extended"]
     #ls_lambda_type = ["models light"]#, "extended map"]
     return (
+        do_bootstrap,
         do_figures,
         do_verbose,
         ls_gcs_labels,
         ls_gcs_populations,
         ls_lambda_map,
         ls_lambda_type,
+        n_bootstrap,
         out_path,
     )
 
@@ -152,6 +158,7 @@ def _(
     GCs,
     Table,
     abell2744,
+    do_bootstrap,
     do_figures,
     do_verbose,
     ls_gcs_labels,
@@ -160,6 +167,8 @@ def _(
     ls_lambda_type,
     mfc,
     mvf,
+    n_bootstrap,
+    numpy,
     os,
     out_path,
     time,
@@ -171,62 +180,72 @@ def _(
         dict_results = {}
 
         for do_lambda_map, type_map in zip(ls_lambda_map, ls_lambda_type):
-            # create the instance of the GCs class
-            bright_gcs = GCs(gcs_name, gcs_label, abell2744)
-            print(
-                f"\n*** {gcs_name}--{do_lambda_map} for {bright_gcs.mask_catalogue.sum()} GCs"
-            )
 
-            # create the instance of the lensing map class
-            lambda_map = mfc.create_instance_lambda_map(
-                type_map, do_lambda_map, bright_gcs, abell2744
-            )
+            # create a list to gather the bootstrap results for this combination of GCs and lambda map
+            dict_results[do_lambda_map] = []
+            # generate the seed and RNG for the bootstrap resampling
+            rng = numpy.random.default_rng(seed = 42)
 
-            # mask GCs that are outside the edges of the lambda map
-            bright_gcs.mask_objects_outside_lambda_map(lambda_map.wcs)
+            for idx_bootstrap in range(n_bootstrap):
+                # create the instance of the GCs class for this bootstrap iteration
+                bright_gcs = GCs(gcs_name, gcs_label, abell2744, do_bootstrap=do_bootstrap, rng = rng)
 
-            # read the local sky noise map -- MRC - to be updated
-            fname = os.path.join(".", "data", "GCs_Harris23", "2508_skynoise_grid.fits")
-            map_sky_noise = FitsMap(fname)
-            print(
-                f"[main] The local sky noise image ranges between {map_sky_noise.img.min()} and {map_sky_noise.img.max()}."
-            )
-            # find the limits of the lambda1 map in (RA, DEC)
-            (
-                lambda_map_xlim_ra,
-                lambda_map_ylim_dec,
-            ) = mfc.find_minimum_common_area_between_maps(
-                lambda_map, lambda_map, map_sky_noise
-            )
-
-            # apply those limits to all maps
-            lambda_map = mfc.apply_minimum_common_limits_to_image(
-                lambda_map_xlim_ra, lambda_map_ylim_dec, lambda_map
-            )
-            map_sky_noise = mfc.apply_minimum_common_limits_to_image(
-                lambda_map_xlim_ra, lambda_map_ylim_dec, map_sky_noise
-            )
-
-            # rebin the map of the local sky noise into the resolution of lambda map 1
-            # - used to get the level of local sky noise at a given location
-            (
-                rebin_sky_noise_img,
-                rebin_sky_noise_wcs,
-                rebin_sky_noise_hdr,
-            ) = mfc.reduce_and_rebin_image(lambda_map, map_sky_noise)
-
-            start = time.time()
-            ### Calculate the Poisson probability of observing the GCs given the lambda map and the selection function
-            ln_prob = mfc.calculate_continuous_spatial_poisson_probability(
-                lambda_map, bright_gcs, do_verbose=do_verbose
-            )
-            dict_results[do_lambda_map] = [ln_prob]
-
-            print(
-                "Time to calculate the spatial Poisson probability: {:.2f} s".format(
-                    time.time() - start
+                print(
+                    f"*** {gcs_name}--{do_lambda_map} for {bright_gcs.mask_catalogue.sum()} GCs - Bootstrap iteration {idx_bootstrap+1}/{n_bootstrap} ***"
                 )
-            )
+            
+                # create the instance of the lensing map class
+                lambda_map = mfc.create_instance_lambda_map(
+                    type_map, do_lambda_map, bright_gcs, abell2744
+                )
+
+                # mask GCs that are outside the edges of the lambda map
+                bright_gcs.mask_objects_outside_lambda_map(lambda_map.wcs)
+
+                # read the local sky noise map -- MRC - to be updated
+                fname = os.path.join(".", "data", "GCs_Harris23", "2508_skynoise_grid.fits")
+                map_sky_noise = FitsMap(fname)
+                if do_verbose:
+                  print(
+                      f"[main] The local sky noise image ranges between {map_sky_noise.img.min()} and {map_sky_noise.img.max()}."
+                  )
+                # find the limits of the lambda1 map in (RA, DEC)
+                (
+                    lambda_map_xlim_ra,
+                    lambda_map_ylim_dec,
+                ) = mfc.find_minimum_common_area_between_maps(
+                    lambda_map, lambda_map, map_sky_noise
+                )
+
+                # apply those limits to all maps
+                lambda_map = mfc.apply_minimum_common_limits_to_image(
+                    lambda_map_xlim_ra, lambda_map_ylim_dec, lambda_map
+                )
+                map_sky_noise = mfc.apply_minimum_common_limits_to_image(
+                    lambda_map_xlim_ra, lambda_map_ylim_dec, map_sky_noise
+                )
+
+                # rebin the map of the local sky noise into the resolution of lambda map 1
+                # - used to get the level of local sky noise at a given location
+                (
+                    rebin_sky_noise_img,
+                    rebin_sky_noise_wcs,
+                    rebin_sky_noise_hdr,
+                ) = mfc.reduce_and_rebin_image(lambda_map, map_sky_noise)
+
+                start = time.time()
+                ### Calculate the Poisson probability of observing the GCs given the lambda map and the selection function
+                ln_prob = mfc.calculate_continuous_spatial_poisson_probability(
+                    lambda_map, bright_gcs, do_verbose=do_verbose
+                )
+                dict_results[do_lambda_map].append(ln_prob)
+
+                if do_verbose:
+                  print(
+                      "Time to calculate the spatial Poisson probability: {:.2f} s".format(
+                          time.time() - start
+                      )
+                  )
 
             if do_figures:
                 # create the output path
@@ -247,14 +266,25 @@ def _(
 
             # create the astropy Table to store it as ecsv
             table = Table(dict_results)
-            fname = os.path.join(out_path, f"table_{gcs_name}.ecsv".replace(" ", "_"))
+            if do_bootstrap:
+                table.meta["description"] = f"Bootstrap resampling of the Poisson probability for {gcs_name} and {do_lambda_map} lambda map"
+                name = "bootstrap_N{:d}_".format(n_bootstrap)
+            else:
+                table.meta["description"] = f"Poisson probability for {gcs_name} and {do_lambda_map} lambda map"
+                name = ""
+            fname = os.path.join(out_path, f"{name}table_{gcs_name}.ecsv".replace(" ", "_"))
             table.write(fname, overwrite=True)
 
             # delete the objects to free up memory
-            del bright_gcs, lambda_map, ln_prob, table
+            del lambda_map, ln_prob, table
         # delete variables to free up memory
         del dict_results
     print("\n")
+    return
+
+
+@app.cell
+def _():
     return
 
 
@@ -289,7 +319,8 @@ def _():
     import master_functions_discrete as mfd
     import master_functions_continuous as mfc
     import master_functions_abell2744 as mfgc
-    return FitsMap, GCs, GalaxyCluster, Table, mfc, mo, mvf, os, time, u
+
+    return FitsMap, GCs, GalaxyCluster, Table, mfc, mo, mvf, numpy, os, time, u
 
 
 if __name__ == "__main__":

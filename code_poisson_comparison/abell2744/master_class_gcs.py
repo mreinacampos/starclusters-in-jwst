@@ -90,7 +90,7 @@ class GCs(GCLoaders):
             self.prob = kwargs.get("prob", numpy.array([]) * u.dimensionless_unscaled)
             return
 
-        print("[GCs] Initialising the sample of GCs: {:s}".format(self.name))
+        #print("[GCs] Initialising the sample of GCs: {:s}".format(self.name))
 
         # load the GC catalogue
         self.gc_catalogue = self.load_gc_catalogue()
@@ -99,11 +99,22 @@ class GCs(GCLoaders):
         self.mask_catalogue = self.create_mask_for_gc_sample(
             self.name, self.gc_catalogue
         )
+        
+        # mask the calalogue to select the relevant GCs
+        mask_catalogue = self.gc_catalogue[self.mask_catalogue]
+        
+        
+        # apply the mask of the indices from the bootstrap if needed
+        if kwargs.get("do_bootstrap", False):
+            # generate an iteration of the indices for the bootstrap resampling
+            bootstrap_mask_idxs = kwargs.get("rng").integers(0, len(mask_catalogue), size=len(mask_catalogue))
+            # select the GCs corresponding to the bootstrap indices
+            mask_catalogue = mask_catalogue[bootstrap_mask_idxs]
 
         # determine the coordinates of the GCs
         coords_gcs = SkyCoord(
-            ra=self.gc_catalogue[self.mask_catalogue]["RA [J2000]"].to("deg"),
-            dec=self.gc_catalogue[self.mask_catalogue]["DEC [J2000]"].to("deg"),
+            ra=mask_catalogue["RA [J2000]"].to("deg"),
+            dec=mask_catalogue["DEC [J2000]"].to("deg"),
             frame="fk5",
             distance=galaxy_cluster.distance,
         )
@@ -112,14 +123,14 @@ class GCs(GCLoaders):
         self.dec = coords_gcs.dec  # declination in the J2000 - FK5 reference frame
         self.kind = "globular clusters"
         self.f150w = (
-            self.gc_catalogue[self.mask_catalogue]["F150W"] * u.ABmag
+            mask_catalogue["F150W"] * u.ABmag
         )  # magnitude in the F150W filter
         self.log10sigsky = (
-            self.gc_catalogue[self.mask_catalogue]["log10sigsky"]
+            mask_catalogue["log10sigsky"]
             * u.dimensionless_unscaled
         )  # log10 of the local sky noise
         self.prob = (
-            self.gc_catalogue[self.mask_catalogue]["prob"] * u.dimensionless_unscaled
+            mask_catalogue["prob"] * u.dimensionless_unscaled
         )  # probability of recovery for every GC
 
         # create a header and wcs object for the GCs - dummy pixel size
@@ -177,7 +188,7 @@ class GCs(GCLoaders):
         return wcs.WCS(primary_hdu.header), primary_hdu.header
 
     def mask_objects_outside_lambda_map(
-        self, map_wcs: wcs.WCS, do_add_edges: bool = False
+        self, map_wcs: wcs.WCS, do_add_edges: bool = False, do_verbose: bool = False
     ) -> None:
         """Mask the GCs that are outside the edges of the lambda map."""
         # convention is such that (0,0) refers to the center of the pixel, not its corner
@@ -208,7 +219,7 @@ class GCs(GCLoaders):
                 <= numpy.abs(coords_edges_lambda_map[:, 1]).max()
             )
         )
-        if numpy.sum(~mask):
+        if numpy.sum(~mask) and do_verbose:
             print(
                 "[mask_objects_outside_lambda_map] Coordinates of the missing GC:",
                 self.ra.to("arcsec")[~mask],
@@ -221,9 +232,11 @@ class GCs(GCLoaders):
             if hasattr(self, quantity):
                 setattr(self, quantity, getattr(self, quantity)[mask])
         # self.ra = self.ra[mask]; self.dec = self.dec[mask]; self.f150w = self.f150w[mask]; self.log10sigsky = self.log10sigsky[mask]; self.prob = self.prob[mask]
-        print(
-            "[mask_objects_outside_lambda_map] There are {:d} GCs within the edges of the lambda map and we lost {:d}".format(
-                len(self.ra), numpy.sum(~mask)
+        
+        if do_verbose:
+            print(
+                "[mask_objects_outside_lambda_map] There are {:d} GCs within the edges of the lambda map and we lost {:d}".format(
+                    len(self.ra), numpy.sum(~mask)
             )
         )
 

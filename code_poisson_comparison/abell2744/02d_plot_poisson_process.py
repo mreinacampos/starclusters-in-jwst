@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.20.4"
+__generated_with = "0.23.5"
 app = marimo.App(width="full")
 
 
@@ -388,6 +388,7 @@ def _(
     os,
     out_path,
     plt,
+    read_tables_bootstrap_gcs,
     read_tables_gcs,
     read_tables_models,
 ):
@@ -398,9 +399,9 @@ def _(
             "Bright GCs",
             "Bright Blue GCs",
             "Bright Red GCs",
-            "High-quality GCs",
+            "Complete GCs",
         ]
-        gc_colors = ["k", "C0", "C3", "C2"]
+        gc_colors = ["k", "C0", "C2", "C3"]
 
         for j, key in enumerate(labels):
             axs[j].annotate(key, xy=(0.98, 0.02), xycoords="axes fraction", ha="right")
@@ -410,6 +411,7 @@ def _(
             ):
                 data_maps = read_tables_models(gcs_name)
                 data_points_obs = read_tables_gcs(gcs_name)
+                data_bootstrap = read_tables_bootstrap_gcs(gcs_name)
 
                 # show the violin plots of the self map comparison
                 try:
@@ -435,6 +437,14 @@ def _(
                         marker="*",
                         color=color,
                         s=200,
+                    )
+                    add_violin_plot(
+                        axs[j],
+                        i,
+                        data_bootstrap[f"{key}"],
+                        mean,
+                        sigma=sigma,
+                        color=color,
                     )
                 except:
                     print(f"WARNING: Observational - {key} not ready yet")
@@ -494,7 +504,6 @@ def _(
     read_tables_gcs,
     read_tables_models,
 ):
-    from ctypes.macholib.dyld import framework_find
     def fig_Zscore_per_selected_model(out_path=out_path, labels=labels):
         fig, axs = plt.subplots(1, 3, figsize=(18, 4.5), sharex=False, sharey=True)
         axs = axs.ravel()
@@ -505,6 +514,13 @@ def _(
             "Bright Red GCs",
         ]
         gc_colors = ["k", "C0", "C3", "C6"]
+
+
+        # add an inset axis for the firts panel
+        x1, x2, y1, y2 = 0, 5, 1.0, 1.8  # subregion of the original image
+        axins = axs[0].inset_axes(
+            [0.55, 0.03, 0.42, 0.42],
+            xlim=(x1, x2), ylim=(y1, y2), xticklabels=[], yticklabels=[])
 
         ls_markers = ["s", "X", "p", "d", "o", ">", "<", "^", "v"]
         for j, key in enumerate(labels):
@@ -532,11 +548,19 @@ def _(
                 # try:
                 mean = numpy.mean(data_maps[f"{key}-{key}"])
                 sigma = numpy.std(data_maps[f"{key}-{key}"])
+
+                # calculate the standard error of the mean and the std dev
+                se_mean = sigma / numpy.sqrt(len(data_maps[f"{key}-{key}"]))
+                se_std_dev = sigma / numpy.sqrt(2*(len(data_maps[f"{key}-{key}"])-1))
+
+                print(f"{key} - {gcs_name} - mean: {mean:.2f} +- se_mean: {se_mean:.2f}, sigma: {sigma:.2f} +- se_std_dev: {se_std_dev:.2f}")
+
                 add_violin_plot(
                     axs[idx],
-                    i,
+                    3-i,
                     numpy.abs((data_maps[f"{key}-{key}"] - mean) / sigma),
                     mean=0,
+                    side = "high", 
                     # sigma=sigma,
                     color=c,
                 )
@@ -544,13 +568,32 @@ def _(
                     ll = key
                 else:
                     ll = ""
-                axs[idx].vlines(numpy.abs((data_points_obs[key] - mean) / sigma), i, i-0.6, ls="-", colors=c, lw=5, label = ll, zorder=100)
-                print(key, gcs_name, numpy.abs((data_points_obs[key].value - mean) / sigma))
+                axs[idx].vlines(numpy.abs((data_points_obs[key] - mean) / sigma), 3 - i, (3 - i)+0.6, ls="-", colors=c, lw=5, label = ll, zorder=100)
+                #print(key, gcs_name, numpy.abs((data_points_obs[key].value - mean) / sigma))
+
+                # add the data to the inset axis too
+                if idx == 0:
+                  if i == 2:
+                    add_violin_plot(
+                      axins,
+                      3-i,
+                      numpy.abs((data_maps[f"{key}-{key}"] - mean) / sigma),
+                      mean=0,
+                      side = "high",
+                      # sigma=sigma,
+                      color=c,
+                    )
+                    axins.vlines(numpy.abs((data_points_obs[key] - mean) / sigma), 3 - i, (3 - i)+0.6, ls="-", colors=c, lw=5, label = ll, zorder=100)
+
+        # add the inset zoom into the first panel
+        #axins.invert_yaxis()
+        axins.xaxis.set_minor_locator(AutoMinorLocator())
+        axs[0].indicate_inset_zoom(axins, edgecolor="black")
 
         for i, ax in enumerate(axs):
             ax.set_yticks(numpy.arange(len(gc_samples)))
             ax.set_xlim(0, 50)
-            ax.set_ylim(-0.8, len(gc_samples) - 0.8)
+            ax.set_ylim(-0.1, len(gc_samples))
             ax.tick_params(
                 direction="in",
                 which="both",
@@ -564,12 +607,16 @@ def _(
             if i == 0:
                 labels = gc_samples.copy()
                 labels[1] = "Complete GCs"
-                ax.set_yticklabels(labels)
-            ax.invert_yaxis()
+                ax.set_yticklabels(labels[::-1])
+            #ax.invert_yaxis()
             ax.set_xlabel(
                 "$|\\mathcal{Z}| = |(\\ln \\mathcal{P} - E[\\ln \\mathcal{P}])/\\sigma|$"
             )
             ax.legend(loc="lower center", ncols=2, bbox_to_anchor=(0.5, 1.00), frameon = False)
+
+            ax.axvline(5, ls = ":", c="k", lw=0.5)
+            ax.axhline(2.9, ls=":", c="k", lw=0.5)
+            ax.axhline(1.9, ls=":", c="k", lw=0.5)
 
         axs[0].annotate(
             "Mass tracers",
@@ -589,9 +636,6 @@ def _(
             "X-ray", xy=(0.98, 0.95), xycoords="axes fraction", ha="right", va="top"
         )
 
-        for ax in axs:
-            ax.axhline(0.2, ls=":", c="k", lw=0.5)
-            ax.axhline(1.2, ls=":", c="k", lw=0.5)
 
         left = 0.1
         right = 0.98
@@ -617,6 +661,208 @@ def _(
         "X-ray",
     ]
     _fig = fig_Zscore_per_selected_model(out_path, _labels)
+    mo.md(f""" Here's the plot! {mo.as_html(_fig)} """)
+    return
+
+
+@app.cell
+def _(
+    AutoMinorLocator,
+    labels,
+    mo,
+    numpy,
+    os,
+    out_path,
+    plt,
+    read_tables_bootstrap_gcs,
+    read_tables_gcs,
+    read_tables_models,
+):
+    def fig_Zscore_per_selected_model_with_inset(out_path=out_path, labels=labels):
+        fig, axs = plt.subplots(1, 3, figsize=(18, 4.5), sharex=False, sharey=True)
+        axs = axs.ravel()
+        gc_samples = [
+            "Bright GCs",
+            "High-quality GCs",
+            "Bright Blue GCs",
+            "Bright Red GCs",
+        ]
+        gc_colors = ["k", "C0", "C3", "C6"]
+
+
+        # add an inset axis for the firts panel
+        x1, x2, y1, y2 = 0, 5, 1.0, 1.8  # subregion of the original image
+        axins = axs[0].inset_axes(
+            [0.55, 0.03, 0.42, 0.42],
+            xlim=(x1, x2), ylim=(y1, y2), xticklabels=[], yticklabels=[])
+
+        ls_markers = ["s", "X", "p", "d", "o", ">", "<", "^", "v"]
+        for j, key in enumerate(labels):
+            print(f"READING - {key}")
+            for i, gcs_name, color in zip(
+                range(len(gc_samples)), gc_samples, gc_colors
+            ):
+                data_maps = read_tables_models(gcs_name)
+                data_points_obs = read_tables_gcs(gcs_name)
+                data_bootstrap = read_tables_bootstrap_gcs(gcs_name)
+
+                if "Berg" in key or "Price" in key or "Cha" in key:
+                    idx = 0
+                    label = "Mass tracers"
+                    c = f"C{j}"
+                elif "Original" in key or "BCG" in key or "Models" in key:
+                    idx = 1
+                    label = "Stellar light tracers"
+                    c = f"C{j}"
+                elif "X-ray" in key:
+                    idx = 2
+                    label = "X-ray tracer"
+                    c = f"C{j}"
+
+                # show the violin plots of the self map comparison
+                # try:
+                mean = numpy.mean(data_maps[f"{key}-{key}"])
+                sigma = numpy.std(data_maps[f"{key}-{key}"])
+
+                # calculate the standard error of the mean and the std dev
+                se_mean = sigma / numpy.sqrt(len(data_maps[f"{key}-{key}"]))
+                se_std_dev = sigma / numpy.sqrt(2*(len(data_maps[f"{key}-{key}"])-1))
+
+                #print(f"{key} - {gcs_name} - mean: {mean:.2f} +- se_mean: {se_mean:.2f}, sigma: {sigma:.2f} +- se_std_dev: {se_std_dev:.2f}")
+
+                # self-map comparison
+                add_violin_plot(
+                    axs[idx],
+                    3-i,
+                    numpy.abs((data_maps[f"{key}-{key}"] - mean) / sigma),
+                    mean=0,
+                    side = "high", 
+                    # sigma=sigma,
+                    color=c,
+                )
+                if i == 0:
+                    ll = key
+                else:
+                    ll = ""
+
+                # add the vertical line for the observational data point
+                axs[idx].vlines(numpy.abs((data_points_obs[key] - mean) / sigma), 3 - i, (3 - i)+0.6, ls="-", colors=c, lw=5, label = ll, zorder=100)
+                add_violin_plot(
+                    axs[idx],
+                    3-i,
+                    numpy.abs((data_bootstrap[f"{key}"] - mean) / sigma),
+                    mean=0,
+                    side = "high", 
+                    # sigma=sigma,
+                    color=c,
+                )
+
+                ci = (numpy.percentile(numpy.abs((data_bootstrap[key] - mean) / sigma), 97.5) - \
+                              numpy.percentile(numpy.abs((data_bootstrap[key] - mean) / sigma), 2.5)) / 2
+
+                print(key, gcs_name, numpy.abs((data_points_obs[key].value - mean) / sigma), ci)
+
+
+                # add the data to the inset axis too
+                if idx == 0:
+                  if i == 2:
+                    add_violin_plot(
+                      axins,
+                      3-i,
+                      numpy.abs((data_maps[f"{key}-{key}"] - mean) / sigma),
+                      mean=0,
+                      side = "high",
+                      # sigma=sigma,
+                      color=c,
+                    )
+                    add_violin_plot(
+                        axins,
+                        3-i,
+                        numpy.abs((data_bootstrap[f"{key}"] - mean) / sigma),
+                        mean=0,
+                        side = "high", 
+                        # sigma=sigma,
+                        color=c,
+                    )
+                    axins.vlines(numpy.abs((data_points_obs[key] - mean) / sigma), 3 - i, (3 - i)+0.6, ls="-", colors=c, lw=5, label = ll, zorder=100)
+
+        # add the inset zoom into the first panel
+        #axins.invert_yaxis()
+        axins.xaxis.set_minor_locator(AutoMinorLocator())
+        axs[0].indicate_inset_zoom(axins, edgecolor="black")
+
+        for i, ax in enumerate(axs):
+            ax.set_yticks(numpy.arange(len(gc_samples)))
+            ax.set_xlim(0, 50)
+            ax.set_ylim(-0.1, len(gc_samples))
+            ax.tick_params(
+                direction="in",
+                which="both",
+                bottom=True,
+                top=True,
+                left=True,
+                right=True,
+            )
+            # set minor ticks in xaxis
+            ax.xaxis.set_minor_locator(AutoMinorLocator())
+            if i == 0:
+                labels = gc_samples.copy()
+                labels[1] = "Complete GCs"
+                ax.set_yticklabels(labels[::-1])
+            #ax.invert_yaxis()
+            ax.set_xlabel(
+                "$|\\mathcal{Z}| = |(\\ln \\mathcal{P} - E[\\ln \\mathcal{P}])/\\sigma|$"
+            )
+            ax.legend(loc="lower center", ncols=2, bbox_to_anchor=(0.5, 1.00), frameon = False)
+
+            ax.fill_betweenx([-0.1, 4], 0, 5, color="grey", alpha=0.2, hatch = "//", zorder=0)
+            #ax.axvline(5, ls = ":", c="k", lw=0.5)
+            ax.axhline(2.9, ls=":", c="k", lw=0.5)
+            ax.axhline(1.9, ls=":", c="k", lw=0.5)
+
+        axs[0].annotate(
+            "Mass tracers",
+            xy=(0.98, 0.95),
+            xycoords="axes fraction",
+            ha="right",
+            va="top",
+        )
+        axs[1].annotate(
+            "Stellar light",
+            xy=(0.98, 0.95),
+            xycoords="axes fraction",
+            ha="right",
+            va="top",
+        )
+        axs[2].annotate(
+            "X-ray", xy=(0.98, 0.95), xycoords="axes fraction", ha="right", va="top"
+        )
+
+
+        left = 0.1
+        right = 0.98
+        top = 0.95
+        bottom = 0.1
+        hspace = 0.2
+        wspace = 0.08
+        fig.subplots_adjust(
+            left=left, top=top, bottom=bottom, right=right, hspace=hspace, wspace=wspace
+        )
+        fname = os.path.join(out_path, "poisson_process_Zscore_per_selected_model_with_inset.pdf")
+        fig.savefig(fname, dpi=300, bbox_inches="tight")
+        # fig.show()
+        return fig
+
+    _labels = [
+        "Bergamini23",
+        "Price25",
+        "Cha24_WL",
+        "Cha24_SL_WL",
+        "Original",
+        "Models",
+        "X-ray",
+    ]
+    _fig = fig_Zscore_per_selected_model_with_inset(out_path, _labels)
     mo.md(f""" Here's the plot! {mo.as_html(_fig)} """)
     return
 
@@ -776,6 +1022,7 @@ def _(
     os,
     out_path,
     plt,
+    read_tables_bootstrap_gcs,
     read_tables_gcs,
     read_tables_models,
 ):
@@ -787,7 +1034,8 @@ def _(
         # read the input tables
         data_maps = read_tables_models("Bright Blue GCs")
         data_points_obs = read_tables_gcs("Bright Blue GCs")
-
+        data_bootstrap = read_tables_bootstrap_gcs("Bright Blue GCs")
+    
         gc_samples = ["Bright Blue GCs"]
         gc_colors = ["C0"]
 
@@ -801,7 +1049,7 @@ def _(
                 0,
                 numpy.abs((data_maps[f"{key}-{key}"] - mean) / sigma),
                 mean=0,
-                color="black",
+                color="black", side = "high"
             )
 
             #axs[j].scatter(
@@ -812,8 +1060,14 @@ def _(
             #    s=300,
             #    lw=0.3, zorder =100
             #)
-            axs[j].vlines(numpy.abs((data_points_obs[key] - mean) / sigma), 0, -0.6, ls="-", colors="C0", lw=5, zorder=100)
-
+            axs[j].vlines(numpy.abs((data_points_obs[key] - mean) / sigma), 0, 0.6, ls="-", colors="C0", lw=5, zorder=100)
+            add_violin_plot(
+                axs[j],
+                0,
+                numpy.abs((data_bootstrap[f"{key}"] - mean) / sigma),
+                mean=0,
+                color=f"C0", side = "high",
+            )
             axs[j].annotate("Bright Blue GCs", xy=(0.02, 0.95), xycoords="axes fraction", ha="left", va="top", color = "C0")
             # Cross-map comparison
             k = 0
@@ -826,7 +1080,7 @@ def _(
                     0,
                     numpy.abs((data_maps[f"{key2}-{key}"] - mean) / sigma),
                     mean=0,
-                    color=f"C{i+1}",
+                    color=f"C{i+1}", side="high"
                 )
                 axs[j].annotate(key2, xy=(0.45+0.2*k, 0.95), xycoords="axes fraction", ha="center", va="top", color = f"C{i+1}")
                 k += 1
@@ -835,7 +1089,7 @@ def _(
             axs[j].set_yticks([-0.8])
             axs[j].set_yticklabels([""])
             axs[j].set_ylabel(f"$\\lambda_2$ = {key}")
-            axs[j].invert_yaxis()
+            #axs[j].invert_yaxis()
             axs[j].tick_params(
                 direction="in",
                 which="both",
@@ -847,6 +1101,11 @@ def _(
             # set minor ticks in xaxis
             axs[j].xaxis.set_minor_locator(AutoMinorLocator())
             axs[j].set_xlim(0, 50)
+            axs[j].set_ylim(0.0, 0.9)
+            #axs[j].axvline(5, ls = ":", c="k", lw=0.5)
+            axs[j].fill_betweenx([0, 1], 0, 5, color="grey", alpha=0.2, hatch = "//", zorder=0)
+
+
         axs[-1].set_xlabel(
             "$|\\mathcal{Z}| = |(\\ln \\mathcal{P} - E[\\ln \\mathcal{P}])/\\sigma|$"
         )
@@ -1034,6 +1293,9 @@ def _(
 
         results = pandas.DataFrame(dict_results, index=["Bright Blue GCs"] + ls_selected)
         print(results)
+        mask = numpy.zeros_like(results, dtype=bool)
+        mask[3, 0:5] = True  # mask all cells except the first row
+        mask[1, 6] = True  # mask the cell corresponding to the cross-map of the first model with itself
         fig = plt.figure(figsize=(22, 16))
         ax = sns.heatmap(
             results,
@@ -1041,6 +1303,7 @@ def _(
             square=True,
             vmin=0,
             vmax=20,
+            mask = mask,
             cmap="Greys_r",
             linewidths=0.5,
             xticklabels = True,
@@ -1054,22 +1317,15 @@ def _(
         # add xticks at the top and bottom
         ax.tick_params(axis="x", bottom=True, top=True, labelbottom=True, labeltop=True)
 
-        ax.add_patch(
+
+        ax.add_patch( # Models
             mpl.patches.Rectangle(
-                (1, 1), 1, len(ls_selected),
+                (0, 2), len(models), 1 ,
                 fill=False,
                 edgecolor="C1",
                 lw=10,
             ))
-        ax.add_patch(
-            mpl.patches.Rectangle(
-                (6, 1), 1, len(ls_selected),
-                fill=False,
-                edgecolor="C2",
-                lw=10,
-            )
-        )
-        ax.add_patch(
+        ax.add_patch( # Bright Blue GCs
             mpl.patches.Rectangle(
                 (0, 0), len(models), 1,
                 fill=False,
@@ -1079,12 +1335,27 @@ def _(
         )
         ax.add_patch(
             mpl.patches.Rectangle(
-                (0, 2), len(models), 1,
+                (4, 0), 0, len(ls_selected) +1,
                 fill=False,
-                edgecolor="C4",
-                lw=10,
-            )
-        )
+                edgecolor="k",
+                lw=5, ls = ":",
+            ))
+        ax.add_patch(
+            mpl.patches.Rectangle(
+                (6, 0), 0, len(ls_selected) +1,
+                fill=False,
+                edgecolor="k",
+                lw=5, ls = ":",
+            ))
+        #ax.add_patch(
+        #    mpl.patches.Rectangle(
+        #        (0, 2), len(models), 1,
+        #        fill=False,
+        #        edgecolor="C4",
+        #        lw=10, zorder = 20
+        #    )
+        #)
+
         ax.set(xlabel="Map against we compare ($\\lambda_2$)", ylabel="Tracer: map from which we spawn ($\\lambda_1$)")
         #ax.xaxis.tick_top()
 
@@ -1104,6 +1375,21 @@ def _(
     _fname = os.path.join(out_path, "heatmap_Zscore_all_models_blue_selected.pdf")
     _fig = fig_Zscore_model_comparison_self_cross_selected(out_path, _labels, _fname)
     mo.md(f""" Here's the plot! {mo.as_html(_fig)} """)
+    return
+
+
+@app.cell
+def _():
+    return
+
+
+@app.cell
+def _():
+    return
+
+
+@app.cell
+def _():
     return
 
 
@@ -1172,6 +1458,27 @@ def _(ascii, os):
 
 
 @app.cell
+def _(ascii, os):
+    def read_tables_bootstrap_gcs(gcs_name):
+        # read the output table of the point - map comparison
+        try:
+            table = os.path.join(
+                ".",
+                "tables",
+                "points_to_maps",
+                f"bootstrap_N200_table_{gcs_name}.ecsv".replace(" ", "_"),
+            )
+            return_data = ascii.read(table, format="ecsv")
+        except:
+            print(f"WARNING - table {table} not ready yet")
+            return_data = None
+
+        return return_data
+
+    return (read_tables_bootstrap_gcs,)
+
+
+@app.cell
 def _(ascii, glob, hstack, os):
     def read_tables_models(gcs_name):
         try:
@@ -1198,7 +1505,7 @@ def _(ascii, glob, hstack, os):
 
 
 @app.function
-def add_violin_plot(ax, idx, data, mean, sigma=1, color="k"):
+def add_violin_plot(ax, idx, data, mean, sigma=1, side = "low", color="k"):
     parts = ax.violinplot(
         (data - mean) / sigma,
         [idx],
@@ -1208,7 +1515,7 @@ def add_violin_plot(ax, idx, data, mean, sigma=1, color="k"):
         showmedians=False,
         showextrema=False,
         bw_method=0.5,
-        side="low",
+        side=side,
     )
     # make the violin bodies the same colour
     for pc in parts["bodies"]:

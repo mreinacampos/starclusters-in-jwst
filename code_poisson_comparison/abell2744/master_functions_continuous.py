@@ -288,7 +288,7 @@ def spawn_magnitudes(
 
 
 def find_minimum_common_area_between_maps(
-    map1: LambdaMap, map2: LambdaMap, map3: LambdaMap
+    map1: LambdaMap, map2: LambdaMap, map3: LambdaMap, do_verbose = False
 ) -> tuple[list, list]:
     """Find the coordinates defining the minimum common area between three maps
     :param map1: instance of LabdaMap
@@ -315,11 +315,12 @@ def find_minimum_common_area_between_maps(
     # find the minimum common area
     map_xlim_ra = [numpy.min(xlim_ra[:, 0]), numpy.max(xlim_ra[:, 1])]
     map_ylim_dec = [numpy.max(ylim_dec[:, 0]), numpy.min(ylim_dec[:, 1])]
-    print(
-        "[find_minimum_common_area_between_maps], BOTH - RA, DEC",
-        map_xlim_ra,
-        map_ylim_dec,
-    )
+    if do_verbose:
+        print(
+            "[find_minimum_common_area_between_maps], BOTH - RA, DEC",
+            map_xlim_ra,
+            map_ylim_dec,
+        )
     return map_xlim_ra, map_ylim_dec
 
 

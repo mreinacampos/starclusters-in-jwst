@@ -230,6 +230,7 @@ class LambdaMapLoaders:
             )  # solar mass per square kpc - critical surface density
         # convert to projected mass surface density
         self.img *= sigma_cr  # units: MSun / kpc^2
+        print(f"[convert_to_projected_mass] Convergence map converted to projected mass surface density using critical surface density of {sigma_cr:.3e}.")
 
     def load_stellar_light_map(self, kind: str):
         if "stellar" in kind:
