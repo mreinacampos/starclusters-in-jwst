@@ -3,7 +3,7 @@ name: "El Gordo"
 redshift: 0.87
 status: "in progress"
 layout: page
-url_zenodo: "---"
+url_zenodo: "https://zenodo.org/records/22644751"
 corresponding_author: Bill Harris
 references: https://ui.adsabs.harvard.edu/abs/2025arXiv250812862H/abstract
 image: "assets/images/elgordo.png"
