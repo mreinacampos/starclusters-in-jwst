@@ -1,7 +1,7 @@
 ---
 name: "El Gordo"
 redshift: 0.87
-status: "in progress"
+status: "Available"
 layout: page
 url_zenodo: "https://zenodo.org/records/22644751"
 corresponding_author: Bill Harris
