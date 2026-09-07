@@ -6,4 +6,13 @@ layout: page
 url_zenodo: https://zenodo.org/records/19236416
 corresponding_author: Bill Harris
 references: https://ui.adsabs.harvard.edu/abs/2025arXiv250803883B/abstract
+filter_f070w: false
+filter_f090w: true
+filter_f115w: true
+filter_f150w: true
+filter_f200w: true
+filter_f277w: false
+filter_f356w: false
+filter_f410m: false
+filter_f444w: false
 ---

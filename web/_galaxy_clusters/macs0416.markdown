@@ -6,4 +6,13 @@ layout: page
 url_zenodo: "---"
 corresponding_author: Jessica Berkheimer
 references: https://scixplorer.org/abs/2026AJ....171...48B/abstract
+filter_f070w: false
+filter_f090w: false
+filter_f115w: false
+filter_f150w: false
+filter_f200w: false
+filter_f277w: false
+filter_f356w: false
+filter_f410m: false
+filter_f444w: false
 ---

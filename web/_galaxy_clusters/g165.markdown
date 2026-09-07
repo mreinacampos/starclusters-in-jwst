@@ -7,4 +7,13 @@ url_zenodo: https://zenodo.org/records/19236476
 corresponding_author: Tyler Hinrichs
 references: https://scixplorer.org/abs/2026arXiv260314480H/abstract
 image: "assets/images/g165.png"
+filter_f070w: false
+filter_f090w: true
+filter_f115w: false
+filter_f150w: true
+filter_f200w: true
+filter_f277w: true
+filter_f356w: true
+filter_f410m: false
+filter_f444w: true
 ---

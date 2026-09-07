@@ -11,10 +11,20 @@ layout: home
 
 <!-- Timeline + always-visible snippets -->
 <style>
+  @media (min-width: 800px) {
+    .wrapper {
+      max-width: 1540px;
+    }
+  }
+
   .timeline-wrapper {
     display:block;
     margin-bottom:1.5rem;
     position:relative; /* for overlay canvas / absolutely positioned snippets */
+  }
+
+  .filter-indicator {
+    text-align:center;
   }
 
   .timeline-column {
@@ -440,8 +450,56 @@ layout: home
   })();
 </script>
 
-| Galaxy Cluster | Redshift | Status | Details | 
-|---------------|----------|---------|---------|
+<table>
+  <thead>
+    <tr>
+      <th>Galaxy Cluster</th>
+      <th>Redshift</th>
+      <th>F070W</th>
+      <th>F090W</th>
+      <th>F115W</th>
+      <th>F150W</th>
+      <th>F200W</th>
+      <th>F277W</th>
+      <th>F356W</th>
+      <th>F410M</th>
+      <th>F444W</th>
+      <th>Status</th>
+      <th>Details</th>
+    </tr>
+  </thead>
+  <tbody>
 {% for galaxy_cluster in sorted_clusters -%}
-| {{ galaxy_cluster.name }} | {% if galaxy_cluster.redshift and galaxy_cluster.redshift != "" and galaxy_cluster.redshift != "---" %}{{ galaxy_cluster.redshift }}{% else %}N/A{% endif %} | {{ galaxy_cluster.status }} | {% if galaxy_cluster.url_zenodo and galaxy_cluster.url_zenodo != "" and galaxy_cluster.url_zenodo != "---" %}[Zenodo]({{ galaxy_cluster.url_zenodo }}){% else %}N/A{% endif %} | 
+{%- assign filter_f070w_values = galaxy_cluster.filter_f070w | append: "" | split: "," -%}
+{%- assign filter_f090w_values = galaxy_cluster.filter_f090w | append: "" | split: "," -%}
+{%- assign filter_f115w_values = galaxy_cluster.filter_f115w | append: "" | split: "," -%}
+{%- assign filter_f150w_values = galaxy_cluster.filter_f150w | append: "" | split: "," -%}
+{%- assign filter_f200w_values = galaxy_cluster.filter_f200w | append: "" | split: "," -%}
+{%- assign filter_f277w_values = galaxy_cluster.filter_f277w | append: "" | split: "," -%}
+{%- assign filter_f356w_values = galaxy_cluster.filter_f356w | append: "" | split: "," -%}
+{%- assign filter_f410m_values = galaxy_cluster.filter_f410m | append: "" | split: "," -%}
+{%- assign filter_f444w_values = galaxy_cluster.filter_f444w | append: "" | split: "," -%}
+{%- assign version_count = filter_f070w_values.size | minus: 1 -%}
+{%- for version_index in (0..version_count) -%}
+{%- if version_index < filter_f070w_values.size %}
+    {%- assign version_label = version_index | plus: 1 -%}
+    <tr>
+      <td>{{ galaxy_cluster.name }}{% if version_count > 0 %} - v{{ version_label }}{% endif %}</td>
+      <td>{% if galaxy_cluster.redshift and galaxy_cluster.redshift != "" and galaxy_cluster.redshift != "---" %}{{ galaxy_cluster.redshift }}{% else %}N/A{% endif %}</td>
+      <td class="filter-indicator">{% if filter_f070w_values[version_index] contains "true" %}✅{% endif %}</td>
+      <td class="filter-indicator">{% if filter_f090w_values[version_index] contains "true" %}✅{% endif %}</td>
+      <td class="filter-indicator">{% if filter_f115w_values[version_index] contains "true" %}✅{% endif %}</td>
+      <td class="filter-indicator">{% if filter_f150w_values[version_index] contains "true" %}✅{% endif %}</td>
+      <td class="filter-indicator">{% if filter_f200w_values[version_index] contains "true" %}✅{% endif %}</td>
+      <td class="filter-indicator">{% if filter_f277w_values[version_index] contains "true" %}✅{% endif %}</td>
+      <td class="filter-indicator">{% if filter_f356w_values[version_index] contains "true" %}✅{% endif %}</td>
+      <td class="filter-indicator">{% if filter_f410m_values[version_index] contains "true" %}✅{% endif %}</td>
+      <td class="filter-indicator">{% if filter_f444w_values[version_index] contains "true" %}✅{% endif %}</td>
+      <td>{{ galaxy_cluster.status }}</td>
+      <td>{% if galaxy_cluster.url_zenodo and galaxy_cluster.url_zenodo != "" and galaxy_cluster.url_zenodo != "---" %}<a href="{{ galaxy_cluster.url_zenodo }}">Zenodo</a>{% else %}N/A{% endif %}</td>
+    </tr>
+{%- endif -%}
+{%- endfor -%}
 {% endfor %}
+  </tbody>
+</table>

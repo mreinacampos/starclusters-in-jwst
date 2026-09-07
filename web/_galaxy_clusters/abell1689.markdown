@@ -1,11 +1,12 @@
 ---
-name: "MACS1423"
-redshift: 0.543
-status: "---"
+name: "Abell 1689"
+redshift: 0.17
+status: "in progress"
 layout: page
 url_zenodo: "---"
 corresponding_author: Bill Harris
 references:
+image: ""
 filter_f070w: false
 filter_f090w: false
 filter_f115w: false
