@@ -1,16 +1,16 @@
 ---
 name: "MACS0416"
 redshift: 0.397
-status: "in progress"
+status: "Available"
 layout: page
-url_zenodo: "---"
+url_zenodo: https://zenodo.org/records/22673395
 corresponding_author: Jessica Berkheimer
 references: https://scixplorer.org/abs/2026AJ....171...48B/abstract
 filter_f070w: false
-filter_f090w: false
-filter_f115w: false
-filter_f150w: false
-filter_f200w: false
+filter_f090w: true
+filter_f115w: true
+filter_f150w: true
+filter_f200w: true
 filter_f277w: false
 filter_f356w: false
 filter_f410m: false
