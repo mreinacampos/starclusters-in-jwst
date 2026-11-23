@@ -479,10 +479,12 @@ layout: home
 {%- assign filter_f356w_values = galaxy_cluster.filter_f356w | append: "" | split: "," -%}
 {%- assign filter_f410m_values = galaxy_cluster.filter_f410m | append: "" | split: "," -%}
 {%- assign filter_f444w_values = galaxy_cluster.filter_f444w | append: "" | split: "," -%}
+{%- assign zenodo_urls = galaxy_cluster.url_zenodo | append: "" | split: "," -%}
 {%- assign version_count = filter_f070w_values.size | minus: 1 -%}
 {%- for version_index in (0..version_count) -%}
 {%- if version_index < filter_f070w_values.size %}
     {%- assign version_label = version_index | plus: 1 -%}
+    {%- assign zenodo_url = zenodo_urls[version_index] | strip -%}
     <tr>
       <td>{{ galaxy_cluster.name }}{% if version_count > 0 %} - v{{ version_label }}{% endif %}</td>
       <td>{% if galaxy_cluster.redshift and galaxy_cluster.redshift != "" and galaxy_cluster.redshift != "---" %}{{ galaxy_cluster.redshift }}{% else %}N/A{% endif %}</td>
@@ -496,7 +498,7 @@ layout: home
       <td class="filter-indicator">{% if filter_f410m_values[version_index] contains "true" %}✅{% endif %}</td>
       <td class="filter-indicator">{% if filter_f444w_values[version_index] contains "true" %}✅{% endif %}</td>
       <td>{{ galaxy_cluster.status }}</td>
-      <td>{% if galaxy_cluster.url_zenodo and galaxy_cluster.url_zenodo != "" and galaxy_cluster.url_zenodo != "---" %}<a href="{{ galaxy_cluster.url_zenodo }}">Zenodo</a>{% else %}N/A{% endif %}</td>
+      <td>{% if zenodo_url and zenodo_url != "" and zenodo_url != "---" %}<a href="{{ zenodo_url }}">Zenodo</a>{% else %}N/A{% endif %}</td>
     </tr>
 {%- endif -%}
 {%- endfor -%}
